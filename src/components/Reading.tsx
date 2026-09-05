@@ -1,251 +1,73 @@
 import { useEffect, useState } from "react";
-import { LinesState, generateAnalysis, FullAnalysis } from "../utils/palmistryRules";
+import { Brain, ChevronDown, Compass, Eye, Globe, Heart, Lightbulb, RefreshCw, Sparkles, Zap } from "lucide-react";
+import { FullAnalysis, LinesState, generateAnalysis } from "../utils/palmistryRules";
 import HandArtwork from "./HandArtwork";
-import { Sparkles, Heart, Brain, Zap, Compass, RefreshCw, Globe, Lightbulb, Eye } from "lucide-react";
 
 type HandType = "left" | "right";
+interface ReadingProps { lines: LinesState; userName: string; hand: HandType; onRestart: () => void; }
 
-interface ReadingProps {
-  lines: LinesState;
-  userName: string;
-  hand: HandType;
-  onRestart: () => void;
-}
+type SectionId = "overall" | "heart" | "head" | "life" | "fate" | "traditions" | "advice";
+const sections: Array<{ id: SectionId; label: string; icon: typeof Eye; color: string }> = [
+  { id: "overall", label: "Общий рисунок", icon: Eye, color: "amber" },
+  { id: "heart", label: "Сердце", icon: Heart, color: "rose" },
+  { id: "head", label: "Голова", icon: Brain, color: "blue" },
+  { id: "life", label: "Жизнь", icon: Zap, color: "emerald" },
+  { id: "fate", label: "Судьба", icon: Compass, color: "violet" },
+  { id: "traditions", label: "Традиции", icon: Globe, color: "cyan" },
+  { id: "advice", label: "Ваш ориентир", icon: Lightbulb, color: "orange" },
+];
+const toneClasses: Record<string, string> = {
+  amber: "border-amber-200 bg-amber-50 text-amber-600",
+  rose: "border-rose-200 bg-rose-50 text-rose-600",
+  blue: "border-blue-200 bg-blue-50 text-blue-600",
+  emerald: "border-emerald-200 bg-emerald-50 text-emerald-600",
+  violet: "border-violet-200 bg-violet-50 text-violet-600",
+  cyan: "border-cyan-200 bg-cyan-50 text-cyan-600",
+  orange: "border-orange-200 bg-orange-50 text-orange-600",
+};
 
 export default function Reading({ lines, userName, hand, onRestart }: ReadingProps) {
   const [analysis, setAnalysis] = useState<FullAnalysis | null>(null);
-  const [isSimulating, setIsSimulating] = useState<boolean>(true);
-  const [loadingText, setLoadingText] = useState<string>("Считывание энергии...");
-  const [expandedSection, setExpandedSection] = useState<string>("overall");
+  const [isSimulating, setIsSimulating] = useState(true);
+  const [loadingText, setLoadingText] = useState("Считываем узор ладони…");
+  const [expandedSection, setExpandedSection] = useState<SectionId>("overall");
 
   useEffect(() => {
-    const texts = [
-      "Сканирование точек соприкосновения...",
-      "Анализ Линии Сердца и эмоционального баланса...",
-      "Определение интеллектуального паттерна Линии Головы...",
-      "Расчет жизненного потенциала Линии Жизни...",
-      "Сверка с традициями мира — Индия, Китай, Тибет, Рим...",
-      "Составление финальной проекции...",
-    ];
-
+    const texts = ["Собираем точки рисунка…", "Смотрим на линии сердца и головы…", "Сверяем традиционные символы…", "Формируем личную карту…"];
     let index = 0;
-    const interval = setInterval(() => {
-      if (index < texts.length) {
-        setLoadingText(texts[index]);
-        index++;
-      } else {
-        clearInterval(interval);
-        setAnalysis(generateAnalysis(lines));
-        setIsSimulating(false);
-      }
-    }, 1200);
-
-    return () => clearInterval(interval);
+    const interval = window.setInterval(() => {
+      if (index < texts.length) { setLoadingText(texts[index]); index += 1; }
+      else { window.clearInterval(interval); setAnalysis(generateAnalysis(lines)); setIsSimulating(false); }
+    }, 850);
+    return () => window.clearInterval(interval);
   }, [lines]);
 
-  if (isSimulating) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[70vh] p-6 text-center bg-[#FDFDFB]">
-        <div className="relative flex items-center justify-center mb-6">
-          <div className="w-20 h-20 border border-zinc-200 rounded-full animate-spin flex items-center justify-center border-t-zinc-800"></div>
-          <Sparkles className="absolute text-zinc-400 animate-pulse stroke-[1]" size={24} />
-        </div>
-        <p className="text-sm tracking-widest text-zinc-500 uppercase animate-pulse">
-          {loadingText}
-        </p>
-      </div>
-    );
-  }
-
+  if (isSimulating) return <div className="flex min-h-[75vh] flex-col items-center justify-center bg-[#fdfdfb] p-6 text-center"><div className="relative mb-7 flex h-24 w-24 items-center justify-center rounded-full border border-amber-200 bg-amber-50/50"><div className="absolute inset-2 animate-spin rounded-full border border-transparent border-t-amber-600" /><Sparkles className="text-amber-600" size={25} strokeWidth={1.2} /></div><p aria-live="polite" className="text-sm uppercase tracking-[0.2em] text-zinc-600">{loadingText}</p><p className="mt-3 max-w-xs text-xs leading-relaxed text-zinc-400">Это символическая интерпретация для развлечения и саморефлексии.</p></div>;
   if (!analysis) return null;
 
-  const sections = [
-    { id: "overall", label: "Общий анализ", icon: <Eye size={16} /> },
-    { id: "heart", label: "Сердце", icon: <Heart size={16} /> },
-    { id: "head", label: "Голова", icon: <Brain size={16} /> },
-    { id: "life", label: "Жизнь", icon: <Zap size={16} /> },
-    { id: "fate", label: "Судьба", icon: <Compass size={16} /> },
-    { id: "traditions", label: "Традиции мира", icon: <Globe size={16} /> },
-    { id: "advice", label: "Совет", icon: <Lightbulb size={16} /> },
-  ];
-
-  const lineColors: Record<string, string> = {
-    heart: "border-rose-400",
-    head: "border-blue-400",
-    life: "border-emerald-400",
-    fate: "border-violet-400",
-    overall: "border-amber-400",
-    traditions: "border-cyan-400",
-    advice: "border-orange-400",
-  };
-
-  const lineIcons: Record<string, React.ReactNode> = {
-    heart: <Heart size={16} className="text-rose-500 stroke-[1.5]" />,
-    head: <Brain size={16} className="text-blue-500 stroke-[1.5]" />,
-    life: <Zap size={16} className="text-emerald-500 stroke-[1.5]" />,
-    fate: <Compass size={16} className="text-violet-500 stroke-[1.5]" />,
-    overall: <Sparkles size={16} className="text-amber-500 stroke-[1.5]" />,
-    traditions: <Globe size={16} className="text-cyan-500 stroke-[1.5]" />,
-    advice: <Lightbulb size={16} className="text-orange-500 stroke-[1.5]" />,
-  };
-
-  const sectionContent = (id: string) => {
+  const content = (id: SectionId) => {
     switch (id) {
-      case "overall":
-        return (
-          <div className="space-y-4">
-            <p className="text-sm leading-relaxed text-zinc-600">{analysis.overall}</p>
-            <div className="flex flex-wrap gap-2 mt-3">
-              {analysis.elements.map((el, i) => (
-                <span
-                  key={i}
-                  className="inline-block px-3 py-1.5 bg-zinc-50 border border-zinc-100 rounded-full text-[10px] font-semibold uppercase tracking-wider text-zinc-500"
-                >
-                  {el}
-                </span>
-              ))}
-            </div>
-            {analysis.dominantElement && (
-              <div className="mt-3 p-3 bg-amber-50/50 border border-amber-100 rounded-lg">
-                <span className="text-[10px] font-semibold uppercase tracking-widest text-amber-600 block mb-1">
-                  Доминирующий элемент
-                </span>
-                <p className="text-sm text-amber-800">{analysis.dominantElement}</p>
-              </div>
-            )}
-          </div>
-        );
-      case "heart":
-        return (
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-widest text-rose-600 mb-2">
-              {analysis.heart.title}
-            </p>
-            <p className="text-sm text-zinc-500 leading-relaxed">{analysis.heart.description}</p>
-          </div>
-        );
-      case "head":
-        return (
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-widest text-blue-600 mb-2">
-              {analysis.head.title}
-            </p>
-            <p className="text-sm text-zinc-500 leading-relaxed">{analysis.head.description}</p>
-          </div>
-        );
-      case "life":
-        return (
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-widest text-emerald-600 mb-2">
-              {analysis.life.title}
-            </p>
-            <p className="text-sm text-zinc-500 leading-relaxed">{analysis.life.description}</p>
-          </div>
-        );
-      case "fate":
-        return (
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-widest text-violet-600 mb-2">
-              {analysis.fate.title}
-            </p>
-            <p className="text-sm text-zinc-500 leading-relaxed">{analysis.fate.description}</p>
-          </div>
-        );
-      case "traditions":
-        return (
-          <p className="text-sm text-zinc-500 leading-relaxed">{analysis.compatibility}</p>
-        );
-      case "advice":
-        return (
-          <p className="text-sm text-zinc-500 leading-relaxed italic">«{analysis.advice}»</p>
-        );
-      default:
-        return null;
+      case "overall": return <div className="space-y-4"><p className="text-[15px] leading-7 text-zinc-600">{analysis.overall}</p><div className="flex flex-wrap gap-2">{analysis.elements.map((element) => <span key={element} className="rounded-full border border-amber-200 bg-amber-50 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-amber-800">{element}</span>)}</div><div className="rounded-2xl border border-amber-100 bg-gradient-to-br from-amber-50 to-orange-50 p-4"><p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-amber-700">Доминирующий мотив</p><p className="mt-1 text-sm leading-relaxed text-amber-950">{analysis.dominantElement}</p></div></div>;
+      case "heart": return <LineReading title={analysis.heart.title} text={analysis.heart.description} />;
+      case "head": return <LineReading title={analysis.head.title} text={analysis.head.description} />;
+      case "life": return <LineReading title={analysis.life.title} text={analysis.life.description} />;
+      case "fate": return <LineReading title={analysis.fate.title} text={analysis.fate.description} />;
+      case "traditions": return <p className="text-[15px] leading-7 text-zinc-600">{analysis.compatibility}</p>;
+      case "advice": return <div className="rounded-2xl bg-zinc-950 p-5 text-[15px] italic leading-7 text-white/85">«{analysis.advice}»</div>;
     }
   };
 
-  return (
-    <div className="max-w-2xl mx-auto px-4 py-8 bg-[#FDFDFB] text-[#111111]">
-      {/* Header */}
-      <div className="text-center mb-8">
-        <p className="text-[10px] font-semibold uppercase tracking-[0.3em] text-zinc-400 mb-1">
-          Результат для
-        </p>
-        <h2 className="text-2xl font-light tracking-widest text-zinc-900 uppercase">
-          {userName}
-        </h2>
-        <div className="inline-flex items-center gap-1.5 mt-2 px-3 py-1 bg-zinc-50 border border-zinc-100 rounded-full">
-          <span className="text-[9px] text-zinc-400 uppercase tracking-wider font-medium">
-            {hand === "left" ? "✋ Левая ладонь — подсознание" : "🤚 Правая ладонь — сознание"}
-          </span>
-        </div>
-        <div className="w-8 h-[1px] bg-zinc-300 mx-auto mt-3 mb-3"></div>
-        <p className="text-xs text-zinc-400 max-w-sm mx-auto font-light leading-relaxed">
-          Хиромантия — это зеркало души. Позвольте себе глубоко прочувствовать это знание.
-        </p>
-      </div>
+  return <section className="mx-auto w-full max-w-3xl bg-[#f7f5f0] px-4 py-8 text-zinc-900 sm:px-6 sm:py-12">
+    <div className="relative overflow-hidden rounded-[2rem] bg-[#20191e] px-6 py-9 text-center text-white shadow-xl sm:px-12"><div className="absolute -right-20 -top-24 h-64 w-64 rounded-full bg-amber-400/20 blur-3xl" /><div className="relative"><div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full border border-amber-200/40 bg-amber-100/10 text-amber-200"><Sparkles size={20} /></div><p className="text-[10px] uppercase tracking-[0.3em] text-white/50">Личная карта {new Date().getFullYear()}</p><h1 className="mt-2 text-3xl font-extralight uppercase tracking-[0.16em]">{userName}</h1><p className="mx-auto mt-4 max-w-md text-sm leading-relaxed text-white/65">Ваши линии — не приговор, а повод внимательнее прислушаться к себе.</p><div className="mt-5 inline-flex rounded-full border border-white/15 bg-white/10 px-4 py-2 text-[10px] uppercase tracking-widest text-white/70">{hand === "left" ? "левая ладонь · внутренний потенциал" : "правая ладонь · реализованный путь"}</div></div></div>
 
-      {/* Artwork Display */}
-      <HandArtwork lines={lines} name={userName} />
+    <div className="my-7 rounded-[2rem] bg-zinc-950 p-2 shadow-lg"><HandArtwork lines={lines} name={userName} /></div>
 
-      {/* Accordion Sections */}
-      <div className="mt-10 space-y-2 max-w-md mx-auto">
-        {sections.map((section) => (
-          <div
-            key={section.id}
-            className={`border rounded-xl overflow-hidden transition-all duration-300 ${
-              expandedSection === section.id
-                ? `border-zinc-200 bg-white shadow-sm`
-                : "border-zinc-100 bg-zinc-50/50"
-            }`}
-          >
-            <button
-              onClick={() =>
-                setExpandedSection(expandedSection === section.id ? "" : section.id)
-              }
-              className="w-full flex items-center justify-between p-4 text-left hover:bg-zinc-50 transition"
-            >
-              <div className="flex items-center gap-3">
-                <div
-                  className={`w-8 h-8 rounded-full flex items-center justify-center border ${lineColors[section.id]}`}
-                >
-                  {lineIcons[section.id]}
-                </div>
-                <span className="text-xs font-semibold uppercase tracking-widest text-zinc-700">
-                  {section.label}
-                </span>
-              </div>
-              <svg
-                className={`w-4 h-4 text-zinc-400 transition-transform duration-300 ${
-                  expandedSection === section.id ? "rotate-180" : ""
-                }`}
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth={2}
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-              </svg>
-            </button>
-            {expandedSection === section.id && (
-              <div className="px-4 pb-5 pt-1 border-t border-zinc-100">
-                {sectionContent(section.id)}
-              </div>
-            )}
-          </div>
-        ))}
-      </div>
+    <div className="mb-6 rounded-2xl border border-amber-200/80 bg-amber-50 p-4 text-xs leading-relaxed text-amber-950"><strong>Помните:</strong> это развлекательная интерпретация традиций хиромантии, а не научная оценка личности, здоровья или будущего. Не принимайте на её основе важные решения.</div>
 
-      {/* Restart */}
-      <div className="text-center mt-14 pb-8">
-        <button
-          onClick={onRestart}
-          className="inline-flex items-center gap-2 text-xs font-medium border border-zinc-200 text-zinc-500 hover:text-zinc-800 hover:border-zinc-400 transition py-3 px-8 rounded-full"
-        >
-          <RefreshCw size={14} />
-          Пройти заново
-        </button>
-      </div>
-    </div>
-  );
+    <div className="space-y-3">{sections.map(({ id, label, icon: Icon, color }) => { const open = expandedSection === id; return <article key={id} className={`overflow-hidden rounded-2xl border transition-all ${open ? "border-zinc-200 bg-white shadow-sm" : "border-zinc-200/70 bg-white/55"}`}><button type="button" aria-expanded={open} onClick={() => setExpandedSection(open ? "overall" : id)} className="flex w-full items-center justify-between gap-3 p-4 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900 focus-visible:ring-inset"><span className="flex items-center gap-3"><span className={`flex h-9 w-9 items-center justify-center rounded-full border ${toneClasses[color]}`}><Icon size={16} strokeWidth={1.7} /></span><span className="text-xs font-semibold uppercase tracking-[0.16em] text-zinc-700">{label}</span></span><ChevronDown size={17} className={`text-zinc-400 transition-transform ${open ? "rotate-180" : ""}`} /></button>{open && <div className="border-t border-zinc-100 px-4 pb-5 pt-4">{content(id)}</div>}</article>; })}</div>
+
+    <div className="mt-9 flex flex-col items-center gap-4"><button type="button" onClick={onRestart} className="flex items-center gap-2 rounded-full border border-zinc-300 bg-white px-7 py-3 text-xs font-semibold uppercase tracking-widest text-zinc-600 transition hover:border-zinc-900 hover:text-zinc-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900"><RefreshCw size={14} /> Пройти заново</button><p className="text-center text-[10px] leading-relaxed text-zinc-400">Интерпретации субъективны. Сохраните только те мысли, которые помогают вам сформулировать собственные цели.</p></div>
+  </section>;
 }
+
+function LineReading({ title, text }: { title: string; text: string }) { return <div><p className="mb-2 text-xs font-semibold uppercase tracking-[0.16em] text-zinc-800">{title}</p><p className="text-[15px] leading-7 text-zinc-600">{text}</p></div>; }

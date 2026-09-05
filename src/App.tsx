@@ -51,7 +51,7 @@ export default function App() {
     capture: "Снимок",
     hand: "Выбор руки",
     adjust: "Калибровка",
-    reading: "Прогноз",
+    reading: "Интерпретация",
   };
 
   return (

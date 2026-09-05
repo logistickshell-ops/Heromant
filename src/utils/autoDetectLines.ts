@@ -189,7 +189,27 @@ function sobel(gray: number[][]): number[][] {
   return edges;
 }
 
-function refineControlPoint(edges: number[][], candidate: Point, radius: number): Point {
+function localContrast(gray: number[][], x: number, y: number): number {
+  const height = gray.length;
+  const width = gray[0].length;
+  const center = gray[y][x];
+  let ringTotal = 0;
+  let ringCount = 0;
+  for (let oy = -4; oy <= 4; oy++) {
+    for (let ox = -4; ox <= 4; ox++) {
+      if (Math.abs(ox) < 2 && Math.abs(oy) < 2) continue;
+      const px = x + ox;
+      const py = y + oy;
+      if (px >= 0 && px < width && py >= 0 && py < height) {
+        ringTotal += gray[py][px];
+        ringCount++;
+      }
+    }
+  }
+  return ringCount ? ringTotal / ringCount - center : 0;
+}
+
+function refinePoint(gray: number[][], edges: number[][], candidate: Point, radius: number): Point {
   const size = edges.length;
   const cx = (candidate.x / 500) * size;
   const cy = (candidate.y / 500) * size;
@@ -201,7 +221,10 @@ function refineControlPoint(edges: number[][], candidate: Point, radius: number)
     for (let x = Math.floor(cx - radius); x <= Math.ceil(cx + radius); x++) {
       if (x < 0 || x >= size || y < 0 || y >= size) continue;
       const distance = Math.hypot(x - cx, y - cy);
-      const score = edges[y][x] - distance * 1.4;
+      // Palm creases are usually darker than their immediate skin ring and
+      // also produce an edge response. Combining both signals is more stable
+      // than following the strongest global Sobel pixel (often a finger edge).
+      const score = localContrast(gray, x, y) * 2.2 + edges[y][x] * 0.65 - distance * 2.2;
       if (score > bestScore) {
         bestScore = score;
         bestX = x;
@@ -216,9 +239,9 @@ function refineControlPoint(edges: number[][], candidate: Point, radius: number)
 function buildAnatomicalLines(hand: Hand, fingerDirection: Direction, bounds: Bounds | null): LinesState {
   const center = point(250, 250);
   const fingerAxis = directionToVector(fingerDirection);
-  // Palm-up orientation: right hand has the thumb on the right when fingers point up.
-  // Therefore the thumb side is clockwise from the finger axis for the right hand.
-  const thumbAxis = hand === "right" ? rotateClockwise(fingerAxis) : rotateCounterClockwise(fingerAxis);
+  // Palmar view, fingers up: the right thumb is on the viewer's left,
+  // while the left thumb is on the viewer's right.
+  const thumbAxis = hand === "right" ? rotateCounterClockwise(fingerAxis) : rotateClockwise(fingerAxis);
 
   const sizeScale = bounds
     ? clamp(Math.max(bounds.width, bounds.height) / 500, 0.78, 1.08)
@@ -251,15 +274,33 @@ function buildAnatomicalLines(hand: Hand, fingerDirection: Direction, bounds: Bo
 }
 
 function refineLines(imageData: ImageData, lines: LinesState): LinesState {
-  const edges = sobel(toGrayscale(imageData));
-  const radius = Math.max(8, Math.floor(imageData.width * 0.018));
+  const gray = toGrayscale(imageData);
+  const edges = sobel(gray);
+  const radius = Math.max(10, Math.floor(imageData.width * 0.035));
 
-  // Only middle control points are nudged. Endpoints stay anatomical and predictable.
+  // Refine all points, but keep the search local so the anatomical template
+  // remains a guardrail when the photo has shadows or background clutter.
   return {
-    heart: { ...lines.heart, control: refineControlPoint(edges, lines.heart.control, radius) },
-    head: { ...lines.head, control: refineControlPoint(edges, lines.head.control, radius) },
-    life: { ...lines.life, control: refineControlPoint(edges, lines.life.control, radius) },
-    fate: { ...lines.fate, control: refineControlPoint(edges, lines.fate.control, radius) },
+    heart: {
+      start: refinePoint(gray, edges, lines.heart.start, radius),
+      control: refinePoint(gray, edges, lines.heart.control, radius),
+      end: refinePoint(gray, edges, lines.heart.end, radius),
+    },
+    head: {
+      start: refinePoint(gray, edges, lines.head.start, radius),
+      control: refinePoint(gray, edges, lines.head.control, radius),
+      end: refinePoint(gray, edges, lines.head.end, radius),
+    },
+    life: {
+      start: refinePoint(gray, edges, lines.life.start, radius),
+      control: refinePoint(gray, edges, lines.life.control, radius),
+      end: refinePoint(gray, edges, lines.life.end, radius),
+    },
+    fate: {
+      start: refinePoint(gray, edges, lines.fate.start, radius),
+      control: refinePoint(gray, edges, lines.fate.control, radius),
+      end: refinePoint(gray, edges, lines.fate.end, radius),
+    },
   };
 }
 
