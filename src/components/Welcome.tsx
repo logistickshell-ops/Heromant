@@ -30,7 +30,7 @@ export default function Welcome({ onStart }: WelcomeProps) {
             Чтение линий ладони
           </div>
           <h1 className="text-5xl font-extralight uppercase leading-[0.95] tracking-[0.12em] text-white drop-shadow-lg sm:text-7xl">
-            Хиромант
+            Вероничка Хиромант))
           </h1>
           <p className="mt-5 max-w-md text-sm font-light leading-relaxed text-white/75 sm:text-base">
             Загляните в узор своей ладони — как в старую книгу о себе. Сделайте снимок, скорректируйте линии и получите персональную интерпретацию.
