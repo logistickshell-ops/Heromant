@@ -49,7 +49,9 @@ export default function HandSelection({ hand, onSelect, onContinue }: HandSelect
               className={`relative flex flex-col items-center rounded-3xl border-2 p-3 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900 focus-visible:ring-offset-2 sm:p-5 ${selected ? "border-zinc-900 bg-zinc-900 text-white shadow-xl" : "border-zinc-200 bg-white text-zinc-700 hover:border-zinc-400"}`}
             >
               {selected && <span className="absolute right-3 top-3 rounded-full bg-white p-1 text-zinc-900"><Check size={13} /></span>}
-              <PalmIllustration side={side} selected={selected} />
+              {/* The source illustration is mirrored relative to the app's
+                  camera convention, so deliberately use the opposite asset. */}
+              <PalmIllustration side={side === "left" ? "right" : "left"} selected={selected} />
               <span className="text-xs font-semibold uppercase tracking-[0.18em]">{side === "left" ? "Левая" : "Правая"}</span>
               <span className={`mt-1 text-[10px] ${selected ? "text-zinc-300" : "text-zinc-400"}`}>{side === "left" ? "внутренний потенциал" : "реализованный путь"}</span>
             </button>
