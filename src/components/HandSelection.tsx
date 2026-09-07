@@ -30,8 +30,8 @@ function PalmIllustration({ side, selected }: { side: Hand; selected: boolean })
 
 export default function HandSelection({ hand, onSelect, onContinue }: HandSelectionProps) {
   return (
-    <section className="mx-auto flex min-h-[75vh] w-full max-w-2xl flex-col items-center justify-center bg-[#fdfdfb] px-4 py-10 text-[#111111]">
-      <div className="mb-8 text-center">
+    <section className="mx-auto flex min-h-[65vh] w-full max-w-2xl flex-col items-center justify-center bg-[#fdfdfb] px-4 py-7 text-[#111111] sm:py-9">
+      <div className="mb-5 text-center sm:mb-7">
         <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.28em] text-zinc-400">Шаг 2 из 4</p>
         <h2 className="text-2xl font-light uppercase tracking-[0.16em] text-zinc-800">Выберите ладонь</h2>
         <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-zinc-500">Положите ладонь вверх, пальцы расслабьте и выберите руку, которую фотографировали.</p>

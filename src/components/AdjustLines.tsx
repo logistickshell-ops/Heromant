@@ -160,7 +160,7 @@ export default function AdjustLines({ image, hand, onConfirm, onBack }: AdjustLi
   // Loading state
   if (isDetecting) {
     return (
-      <div className="relative flex min-h-[75vh] flex-col items-center justify-center overflow-hidden bg-[#100c18] p-6 text-center text-white">
+      <div className="relative flex min-h-[62vh] flex-col items-center justify-center overflow-hidden bg-[#100c18] p-4 text-center text-white sm:min-h-[68vh] sm:p-6">
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(167,139,250,0.22),transparent_42%)]" />
         <div className="relative mb-8 flex h-40 w-40 items-center justify-center">
           <div className="absolute inset-0 animate-[spin_12s_linear_infinite] rounded-full border border-violet-300/30 border-dashed" />
@@ -190,7 +190,7 @@ export default function AdjustLines({ image, hand, onConfirm, onBack }: AdjustLi
   if (!lines) return null;
 
   return (
-    <div className="flex flex-col items-center max-w-xl mx-auto p-4 sm:p-6 bg-[#FDFDFB] text-[#111111] min-h-[85vh]">
+    <div className="flex flex-col items-center max-w-xl mx-auto p-3 sm:p-5 bg-[#FDFDFB] text-[#111111] min-h-[70vh]">
       <div className="text-center mb-5">
         <div className="inline-flex items-center gap-2 mb-3 px-4 py-1.5 bg-zinc-50 border border-zinc-100 rounded-full">
           <span className="text-sm">

@@ -14,7 +14,7 @@ export default function Welcome({ onStart }: WelcomeProps) {
   };
 
   return (
-    <section className="relative isolate flex min-h-[calc(100svh-73px)] items-end overflow-hidden bg-[#160f18] text-white">
+    <section className="relative isolate flex min-h-[calc(100svh-73px)] items-center overflow-hidden bg-[#160f18] text-white">
       <img
         src="/hero-chiromant.jpg"
         alt="Хиромантка читает линии ладони в мистической библиотеке"
@@ -22,8 +22,12 @@ export default function Welcome({ onStart }: WelcomeProps) {
       />
       <div className="absolute inset-0 -z-10 bg-[linear-gradient(180deg,rgba(17,10,18,0.12)_0%,rgba(17,10,18,0.24)_28%,rgba(17,10,18,0.94)_100%)]" />
       <div className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_78%_26%,rgba(255,179,78,0.2),transparent_36%)]" />
+      <div className="magic-orbit magic-orbit-one" aria-hidden="true" />
+      <div className="magic-orbit magic-orbit-two" aria-hidden="true" />
+      <div className="magic-dust magic-dust-one" aria-hidden="true" />
+      <div className="magic-dust magic-dust-two" aria-hidden="true" />
 
-      <div className="mx-auto w-full max-w-6xl px-5 pb-10 pt-28 sm:px-8 sm:pb-14 lg:px-12">
+      <div className="mx-auto w-full max-w-6xl px-5 pb-14 pt-16 sm:px-8 sm:pb-20 sm:pt-20 lg:px-12">
         <div className="max-w-xl">
           <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-white/25 bg-black/20 px-3 py-1.5 text-[10px] font-medium uppercase tracking-[0.24em] text-white/75 backdrop-blur-sm">
             <Eye size={14} strokeWidth={1.4} />

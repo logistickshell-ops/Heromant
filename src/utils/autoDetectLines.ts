@@ -243,25 +243,27 @@ function quadratic(a: Point, b: Point, c: Point, t: number): Point {
 
 function traceCrease(gray: number[][], edges: number[][], line: { start: Point; control: Point; end: Point }, radius: number): LinesState["heart"] {
   const samples: Point[] = [];
-  for (let index = 0; index <= 12; index++) {
-    const t = index / 12;
+  for (let index = 0; index <= 8; index++) {
+    const t = index / 8;
     const base = quadratic(line.start, line.control, line.end, t);
-    const before = quadratic(line.start, line.control, line.end, Math.max(0, t - 0.04));
-    const after = quadratic(line.start, line.control, line.end, Math.min(1, t + 0.04));
+    const before = quadratic(line.start, line.control, line.end, Math.max(0, t - 0.05));
+    const after = quadratic(line.start, line.control, line.end, Math.min(1, t + 0.05));
     const tangent = { x: after.x - before.x, y: after.y - before.y };
     const length = Math.hypot(tangent.x, tangent.y) || 1;
     const normal = { x: -tangent.y / length, y: tangent.x / length };
     let best = base;
     let bestScore = -Infinity;
-    for (let offset = -radius; offset <= radius; offset += Math.max(2, radius / 5)) {
+    for (let offset = -radius; offset <= radius; offset += Math.max(3, radius / 3)) {
       const candidate = point(base.x + normal.x * offset, base.y + normal.y * offset);
       const refined = refinePoint(gray, edges, candidate, Math.max(3, Math.floor(radius / 3)));
-      const score = localContrast(gray, Math.round((refined.x / 500) * edges.length), Math.round((refined.y / 500) * edges.length));
+      const pixelX = Math.max(0, Math.min(edges.length - 1, Math.round((refined.x / 500) * edges.length)));
+      const pixelY = Math.max(0, Math.min(edges.length - 1, Math.round((refined.y / 500) * edges.length)));
+      const score = localContrast(gray, pixelX, pixelY);
       if (score > bestScore) { bestScore = score; best = refined; }
     }
     samples.push(best);
   }
-  return { start: samples[0], control: samples[6], end: samples[12] };
+  return { start: samples[0], control: samples[4], end: samples[8] };
 }
 
 function buildAnatomicalLines(hand: Hand, fingerDirection: Direction, bounds: Bounds | null): LinesState {
@@ -336,7 +338,7 @@ export function autoDetectLines(imageDataUrl: string, hand: Hand = "right"): Pro
         const canvas = document.createElement("canvas");
         // Keep analysis responsive on high-resolution phone photos while
         // retaining enough detail for local edge refinement.
-        const analysisSize = Math.min(cropSize, 720);
+        const analysisSize = Math.min(cropSize, 480);
         canvas.width = analysisSize;
         canvas.height = analysisSize;
 
@@ -350,7 +352,7 @@ export function autoDetectLines(imageDataUrl: string, hand: Hand = "right"): Pro
         const sy = (img.height - cropSize) / 2;
         ctx.drawImage(img, sx, sy, cropSize, cropSize, 0, 0, analysisSize, analysisSize);
 
-        const imageData = ctx.getImageData(0, 0, cropSize, cropSize);
+        const imageData = ctx.getImageData(0, 0, analysisSize, analysisSize);
         const mask = getSkinMask(imageData);
         const bounds = getBounds(mask);
         const direction = bounds ? detectFingerDirection(mask, bounds) : "up";
