@@ -1,8 +1,9 @@
 import { useState, useRef, useEffect } from "react";
 import { LinesState } from "../utils/palmistryRules";
-import { Check, Info, CircleHelp, Sparkles, Wand2, Sliders } from "lucide-react";
+import { Check, Info, CircleHelp, Sparkles, Wand2, Sliders, Volume2, VolumeX } from "lucide-react";
 import PalmGuide from "./PalmGuide";
 import { autoDetectLines, defaultLinesForHand } from "../utils/autoDetectLines";
+import { playScanChime, startScanSound, stopScanSound } from "../utils/scanSound";
 
 type Hand = "left" | "right";
 
@@ -27,9 +28,25 @@ export default function AdjustLines({ image, hand, onConfirm, onBack }: AdjustLi
   const [mode, setMode] = useState<"auto" | "manual">("auto");
   const [isDetecting, setIsDetecting] = useState(false);
   const [detectError, setDetectError] = useState(false);
+  const [soundEnabled, setSoundEnabled] = useState(false);
+  const [scanPhase, setScanPhase] = useState(0);
 
   // Дефолтные позиции линий - зависят от руки
   const defaultLines: LinesState = defaultLinesForHand[hand];
+
+  useEffect(() => {
+    if (!isDetecting) return;
+    const started = startScanSound();
+    setSoundEnabled(started);
+    const phaseTimer = window.setInterval(() => {
+      setScanPhase((phase) => (phase + 1) % 4);
+      playScanChime();
+    }, 900);
+    return () => {
+      window.clearInterval(phaseTimer);
+      stopScanSound();
+    };
+  }, [isDetecting]);
 
   // Автоопределение при монтировании (если режим = auto)
   useEffect(() => {
@@ -140,17 +157,29 @@ export default function AdjustLines({ image, hand, onConfirm, onBack }: AdjustLi
   // Loading state
   if (isDetecting) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[75vh] p-6 text-center bg-[#FDFDFB]">
-        <div className="relative flex items-center justify-center mb-6">
-          <div className="w-20 h-20 border border-zinc-200 rounded-full animate-spin flex items-center justify-center border-t-zinc-800"></div>
-          <Wand2 className="absolute text-zinc-400 animate-pulse stroke-[1]" size={24} />
+      <div className="relative flex min-h-[75vh] flex-col items-center justify-center overflow-hidden bg-[#100c18] p-6 text-center text-white">
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(167,139,250,0.22),transparent_42%)]" />
+        <div className="relative mb-8 flex h-40 w-40 items-center justify-center">
+          <div className="absolute inset-0 animate-[spin_12s_linear_infinite] rounded-full border border-violet-300/30 border-dashed" />
+          <div className="absolute inset-4 animate-[spin_7s_linear_infinite_reverse] rounded-full border border-amber-200/40" />
+          <div className="absolute inset-10 animate-pulse rounded-full bg-violet-400/20 blur-xl" />
+          <Wand2 className="relative z-10 text-amber-200 animate-pulse stroke-[1]" size={30} />
+          {[0, 1, 2, 3].map((spark) => (
+            <Sparkles key={spark} size={15} className={`absolute text-amber-200 animate-pulse ${spark === 0 ? "-top-1 left-1/2" : spark === 1 ? "top-1/2 -right-2" : spark === 2 ? "-bottom-1 left-1/2" : "top-1/2 -left-2"}`} style={{ animationDelay: `${spark * 180}ms` }} />
+          ))}
         </div>
-        <p className="text-sm tracking-widest text-zinc-500 uppercase animate-pulse">
+        <p aria-live="polite" className="relative text-sm tracking-[0.24em] text-violet-100 uppercase animate-pulse">
           Сканирую ладонь...
         </p>
-        <p className="text-xs text-zinc-400 mt-3 max-w-xs">
+        <p className="relative mt-3 max-w-xs text-xs leading-relaxed text-white/55">
           Ищу линии сердца, головы, жизни и судьбы на вашем снимке
         </p>
+        <div className="relative mt-7 flex gap-2" aria-hidden="true">
+          {[0, 1, 2, 3].map((step) => <span key={step} className={`h-1.5 w-8 rounded-full transition-all duration-500 ${step <= scanPhase ? "bg-amber-200 shadow-[0_0_12px_rgba(253,230,138,.8)]" : "bg-white/15"}`} />)}
+        </div>
+        <button type="button" onClick={() => { const started = startScanSound(); setSoundEnabled(started); }} className="relative mt-7 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-4 py-2 text-[10px] uppercase tracking-widest text-white/60 transition hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-200">
+          {soundEnabled ? <Volume2 size={14} /> : <VolumeX size={14} />} {soundEnabled ? "Магический звук включён" : "Включить звук"}
+        </button>
       </div>
     );
   }
