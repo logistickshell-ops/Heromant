@@ -74,8 +74,6 @@ export default function App() {
       {/* Main Screen Content */}
       <main className="relative flex-grow flex flex-col justify-center overflow-hidden">
         <div key={step} className="step-portal relative">
-          <div className="portal-ring portal-ring-one" aria-hidden="true" />
-          <div className="portal-ring portal-ring-two" aria-hidden="true" />
           {step === "welcome" && <Welcome onStart={handleStart} />}
 
           {step === "capture" && <Capture onCapture={handleCapture} />}
