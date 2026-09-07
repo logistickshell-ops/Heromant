@@ -45,7 +45,7 @@ function HandDiagram({ hand }: { hand: GuideHand }) {
         большой
       </text>
       <text x="110" y="255" fill="#a1a1aa" fontSize="8" textAnchor="middle">
-        {isLeft ? "левая: большой палец слева" : "правая: большой палец справа"}
+        {isLeft ? "левая: большой палец справа" : "правая: большой палец слева"}
       </text>
     </svg>
   );
@@ -129,7 +129,7 @@ export default function PalmGuide({ onClose }: PalmGuideProps) {
               <HandDiagram hand="left" />
             </div>
             <p className="text-[10px] text-zinc-500 leading-relaxed mt-3 text-center">
-              В этом приложении используется зеркальный ракурс камеры. Правая рука: большой палец справа, мизинец слева. Левая рука: большой палец слева, мизинец справа.
+              Анализ выполняется ладонью вверх. Правая рука: большой палец слева, мизинец справа. Левая рука: большой палец справа, мизинец слева.
             </p>
           </div>
 

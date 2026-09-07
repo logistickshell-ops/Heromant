@@ -239,10 +239,10 @@ function refinePoint(gray: number[][], edges: number[][], candidate: Point, radi
 function buildAnatomicalLines(hand: Hand, fingerDirection: Direction, bounds: Bounds | null): LinesState {
   const center = point(250, 250);
   const fingerAxis = directionToVector(fingerDirection);
-  // App convention: the hand illustrations are intentionally swapped to
-  // match the mirrored camera preview. Left is shown with the thumb on the
-  // viewer's left; right is shown with the thumb on the viewer's right.
-  const thumbAxis = hand === "left" ? rotateCounterClockwise(fingerAxis) : rotateClockwise(fingerAxis);
+  // Palm-up view: the right thumb appears on the viewer's left, while the
+  // left thumb appears on the viewer's right. Keep the calibration overlay
+  // aligned with the actual selected hand.
+  const thumbAxis = hand === "right" ? rotateCounterClockwise(fingerAxis) : rotateClockwise(fingerAxis);
 
   const sizeScale = bounds
     ? clamp(Math.max(bounds.width, bounds.height) / 500, 0.78, 1.08)

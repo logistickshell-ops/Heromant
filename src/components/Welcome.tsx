@@ -27,13 +27,13 @@ export default function Welcome({ onStart }: WelcomeProps) {
         <div className="max-w-xl">
           <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-white/25 bg-black/20 px-3 py-1.5 text-[10px] font-medium uppercase tracking-[0.24em] text-white/75 backdrop-blur-sm">
             <Eye size={14} strokeWidth={1.4} />
-            Чтение линий ладони
+            Врата тайного узора
           </div>
           <h1 className="text-5xl font-extralight uppercase leading-[0.95] tracking-[0.12em] text-white drop-shadow-lg sm:text-7xl">
-            Вероничка Хиромант))
+            Хиромант
           </h1>
           <p className="mt-5 max-w-md text-sm font-light leading-relaxed text-white/75 sm:text-base">
-            Загляните в узор своей ладони — как в старую книгу о себе. Сделайте снимок, скорректируйте линии и получите персональную интерпретацию.
+            Ладонь хранит узор мгновений — тонкую карту выборов, чувств и дорог, которые вы открываете сами. Позвольте свету свечей провести вас по этим знакам: сделайте снимок, настройте линии и раскройте свою личную символическую карту.
           </p>
 
           <form onSubmit={handleSubmit} className="mt-8 max-w-md rounded-2xl border border-white/20 bg-black/30 p-3 shadow-2xl backdrop-blur-md sm:p-4">
@@ -50,18 +50,18 @@ export default function Welcome({ onStart }: WelcomeProps) {
                 className="min-w-0 flex-1 rounded-xl border border-white/20 bg-white/10 px-4 py-3.5 text-sm text-white outline-none transition placeholder:text-white/45 focus:border-amber-200 focus:ring-2 focus:ring-amber-200/30"
               />
               <button type="submit" className="flex items-center justify-center gap-2 rounded-xl bg-white px-5 py-3.5 text-xs font-semibold uppercase tracking-[0.16em] text-zinc-900 transition hover:bg-amber-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-200">
-                Начать <ArrowRight size={16} />
+                Открыть карту <ArrowRight size={16} />
               </button>
             </div>
           </form>
 
           <p className="mt-5 max-w-md text-[10px] leading-relaxed text-white/55">
-            Для развлечения и саморефлексии. Хиромантия не является научным методом, диагностикой и не заменяет медицинские, психологические или финансовые рекомендации. Фото обрабатывается только на вашем устройстве.
+            Обряд создан для развлечения и тихой саморефлексии. Это символическое чтение традиций, а не научный метод, диагностика или предсказание будущего; оно не заменяет медицинские, психологические и финансовые рекомендации. Фотография остаётся на вашем устройстве.
           </p>
         </div>
       </div>
       <div className="pointer-events-none absolute bottom-5 right-6 hidden items-center gap-2 text-[9px] uppercase tracking-[0.28em] text-white/40 sm:flex">
-        <Sparkles size={13} /> Ваша история уже на ладони
+        <Sparkles size={13} /> Тайна начинается с прикосновения
       </div>
     </section>
   );
