@@ -236,6 +236,34 @@ function refinePoint(gray: number[][], edges: number[][], candidate: Point, radi
   return point((bestX / size) * 500, (bestY / size) * 500);
 }
 
+function quadratic(a: Point, b: Point, c: Point, t: number): Point {
+  const u = 1 - t;
+  return point(u * u * a.x + 2 * u * t * b.x + t * t * c.x, u * u * a.y + 2 * u * t * b.y + t * t * c.y);
+}
+
+function traceCrease(gray: number[][], edges: number[][], line: { start: Point; control: Point; end: Point }, radius: number): LinesState["heart"] {
+  const samples: Point[] = [];
+  for (let index = 0; index <= 12; index++) {
+    const t = index / 12;
+    const base = quadratic(line.start, line.control, line.end, t);
+    const before = quadratic(line.start, line.control, line.end, Math.max(0, t - 0.04));
+    const after = quadratic(line.start, line.control, line.end, Math.min(1, t + 0.04));
+    const tangent = { x: after.x - before.x, y: after.y - before.y };
+    const length = Math.hypot(tangent.x, tangent.y) || 1;
+    const normal = { x: -tangent.y / length, y: tangent.x / length };
+    let best = base;
+    let bestScore = -Infinity;
+    for (let offset = -radius; offset <= radius; offset += Math.max(2, radius / 5)) {
+      const candidate = point(base.x + normal.x * offset, base.y + normal.y * offset);
+      const refined = refinePoint(gray, edges, candidate, Math.max(3, Math.floor(radius / 3)));
+      const score = localContrast(gray, Math.round((refined.x / 500) * edges.length), Math.round((refined.y / 500) * edges.length));
+      if (score > bestScore) { bestScore = score; best = refined; }
+    }
+    samples.push(best);
+  }
+  return { start: samples[0], control: samples[6], end: samples[12] };
+}
+
 function buildAnatomicalLines(hand: Hand, fingerDirection: Direction, bounds: Bounds | null): LinesState {
   const center = point(250, 250);
   const fingerAxis = directionToVector(fingerDirection);
@@ -279,29 +307,13 @@ function refineLines(imageData: ImageData, lines: LinesState): LinesState {
   const edges = sobel(gray);
   const radius = Math.max(10, Math.floor(imageData.width * 0.035));
 
-  // Refine all points, but keep the search local so the anatomical template
-  // remains a guardrail when the photo has shadows or background clutter.
+  // Trace each crease along its whole path. A point-only search can jump to a
+  // nearby finger edge; path tracing keeps the result anatomically coherent.
   return {
-    heart: {
-      start: refinePoint(gray, edges, lines.heart.start, radius),
-      control: refinePoint(gray, edges, lines.heart.control, radius),
-      end: refinePoint(gray, edges, lines.heart.end, radius),
-    },
-    head: {
-      start: refinePoint(gray, edges, lines.head.start, radius),
-      control: refinePoint(gray, edges, lines.head.control, radius),
-      end: refinePoint(gray, edges, lines.head.end, radius),
-    },
-    life: {
-      start: refinePoint(gray, edges, lines.life.start, radius),
-      control: refinePoint(gray, edges, lines.life.control, radius),
-      end: refinePoint(gray, edges, lines.life.end, radius),
-    },
-    fate: {
-      start: refinePoint(gray, edges, lines.fate.start, radius),
-      control: refinePoint(gray, edges, lines.fate.control, radius),
-      end: refinePoint(gray, edges, lines.fate.end, radius),
-    },
+    heart: traceCrease(gray, edges, lines.heart, radius),
+    head: traceCrease(gray, edges, lines.head, radius),
+    life: traceCrease(gray, edges, lines.life, radius),
+    fate: traceCrease(gray, edges, lines.fate, radius),
   };
 }
 
