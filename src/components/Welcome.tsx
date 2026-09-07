@@ -30,6 +30,8 @@ export default function Welcome({ onStart }: WelcomeProps) {
       <div className="magic-rays" aria-hidden="true" />
       <div className="magic-glow" aria-hidden="true" />
       <div className="magic-stars" aria-hidden="true">{Array.from({ length: 9 }, (_, index) => <i key={index} style={{ "--star-index": index } as React.CSSProperties} />)}</div>
+      <div className="magic-frame" aria-hidden="true"><span>✦</span><span>◈</span><span>✧</span><span>◈</span></div>
+      <div className="magic-runes" aria-hidden="true">ᚱ　ᛟ　ᛉ　ᚨ　ᛞ　ᛃ　ᛏ</div>
 
       <div className="relative z-10 mx-auto w-full max-w-6xl px-5 pb-14 pt-8 sm:px-8 sm:pb-20 sm:pt-12 lg:px-12">
         <div className="max-w-xl">
@@ -37,7 +39,7 @@ export default function Welcome({ onStart }: WelcomeProps) {
             <Eye size={14} strokeWidth={1.4} />
             Врата тайного узора
           </div>
-          <h1 className="text-5xl font-extralight uppercase leading-[0.95] tracking-[0.12em] text-white drop-shadow-lg sm:text-7xl">
+          <h1 className="magic-title text-5xl font-extralight uppercase leading-[0.95] tracking-[0.12em] text-white drop-shadow-lg sm:text-7xl">
             Хиромант
           </h1>
           <p className="mt-5 max-w-md text-sm font-light leading-relaxed text-white/75 sm:text-base">
@@ -57,7 +59,7 @@ export default function Welcome({ onStart }: WelcomeProps) {
                 autoComplete="given-name"
                 className="min-w-0 flex-1 rounded-xl border border-white/20 bg-white/10 px-4 py-3.5 text-sm text-white outline-none transition placeholder:text-white/45 focus:border-amber-200 focus:ring-2 focus:ring-amber-200/30"
               />
-              <button type="submit" className="flex items-center justify-center gap-2 rounded-xl bg-white px-5 py-3.5 text-xs font-semibold uppercase tracking-[0.16em] text-zinc-900 transition hover:bg-amber-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-200">
+              <button type="submit" className="magic-button flex items-center justify-center gap-2 rounded-xl bg-white px-5 py-3.5 text-xs font-semibold uppercase tracking-[0.16em] text-zinc-900 transition hover:bg-amber-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-200">
                 Открыть карту <ArrowRight size={16} />
               </button>
             </div>

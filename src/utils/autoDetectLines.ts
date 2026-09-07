@@ -128,7 +128,9 @@ function project(center: Point, thumbAxis: Vec, fingerAxis: Vec, across: number,
 
 function buildPalmTemplate(hand: Hand, direction: Direction, bounds: Bounds | null): LinesState {
   const fingerAxis = directionVector(direction);
-  const thumbAxis = hand === "right" ? rotateCounterClockwise(fingerAxis) : rotateClockwise(fingerAxis);
+  // Camera convention requested by the interface: swap the auto-recognition
+  // hand geometry so the detected overlay follows the displayed palm cards.
+  const thumbAxis = hand === "left" ? rotateCounterClockwise(fingerAxis) : rotateClockwise(fingerAxis);
   const center = bounds ? point(((bounds.left + bounds.right) / 2 / bounds.imageWidth) * 500, ((bounds.top + bounds.bottom) / 2 / bounds.imageHeight) * 500) : point(250, 250);
   const scaleX = bounds ? Math.max(.68, Math.min(1.18, bounds.width / 290)) : 1;
   const scaleY = bounds ? Math.max(.68, Math.min(1.18, bounds.height / 430)) : 1;
