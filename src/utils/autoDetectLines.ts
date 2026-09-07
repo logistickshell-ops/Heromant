@@ -2,238 +2,119 @@ import { LinesState, Point } from "./palmistryRules";
 
 type Hand = "left" | "right";
 type Direction = "up" | "down" | "left" | "right";
+interface Vec { x: number; y: number }
+interface Bounds { top: number; bottom: number; left: number; right: number; width: number; height: number; imageWidth: number; imageHeight: number; coverage: number }
+interface GrayImage { values: number[][]; width: number; height: number }
 
-interface Vec {
-  x: number;
-  y: number;
-}
-
-interface Bounds {
-  top: number;
-  bottom: number;
-  left: number;
-  right: number;
-  width: number;
-  height: number;
-}
-
-const clamp = (value: number, min = 20, max = 480) => Math.max(min, Math.min(max, value));
-
+const clamp = (value: number, min = 18, max = 482) => Math.max(min, Math.min(max, value));
 const point = (x: number, y: number): Point => ({ x: clamp(x), y: clamp(y) });
 
-function rotateClockwise(v: Vec): Vec {
-  return { x: -v.y, y: v.x };
+function directionVector(direction: Direction): Vec {
+  if (direction === "down") return { x: 0, y: 1 };
+  if (direction === "left") return { x: -1, y: 0 };
+  if (direction === "right") return { x: 1, y: 0 };
+  return { x: 0, y: -1 };
 }
 
-function rotateCounterClockwise(v: Vec): Vec {
-  return { x: v.y, y: -v.x };
-}
-
-function directionToVector(direction: Direction): Vec {
-  switch (direction) {
-    case "up":
-      return { x: 0, y: -1 };
-    case "down":
-      return { x: 0, y: 1 };
-    case "left":
-      return { x: -1, y: 0 };
-    case "right":
-      return { x: 1, y: 0 };
-  }
-}
-
-function project(center: Point, thumbAxis: Vec, fingerAxis: Vec, thumb: number, fingers: number): Point {
-  return point(
-    center.x + thumbAxis.x * thumb + fingerAxis.x * fingers,
-    center.y + thumbAxis.y * thumb + fingerAxis.y * fingers
-  );
-}
+function rotateClockwise(v: Vec): Vec { return { x: -v.y, y: v.x }; }
+function rotateCounterClockwise(v: Vec): Vec { return { x: v.y, y: -v.x }; }
 
 function rgbToSkin(r: number, g: number, b: number): boolean {
   const max = Math.max(r, g, b);
   const min = Math.min(r, g, b);
-  const diff = max - min;
-  let hue = 0;
-
-  if (diff !== 0) {
-    if (max === r) hue = ((g - b) / diff + (g < b ? 6 : 0)) * 60;
-    else if (max === g) hue = ((b - r) / diff + 2) * 60;
-    else hue = ((r - g) / diff + 4) * 60;
-  }
-
-  const saturation = max === 0 ? 0 : diff / max;
-  const value = max / 255;
-  const softSkin = hue >= 0 && hue <= 55 && saturation >= 0.08 && saturation <= 0.78 && value >= 0.22;
-  const warmBright = r > 95 && g > 55 && b > 35 && r > b && r >= g * 0.82 && Math.abs(r - g) > 8;
-  return softSkin || warmBright;
+  const spread = max - min;
+  const warm = r > b * 1.08 && g > b * 0.9 && r > 65 && g > 38;
+  const saturation = max === 0 ? 0 : spread / max;
+  const hueLike = r >= g * 0.78 && r >= b * 1.08 && saturation < 0.78;
+  return warm && hueLike && max > 45;
 }
 
-function getSkinMask(imageData: ImageData): boolean[][] {
+function buildGray(imageData: ImageData): GrayImage {
   const { data, width, height } = imageData;
-  const mask: boolean[][] = [];
-
+  const values: number[][] = Array.from({ length: height }, () => Array<number>(width).fill(0));
   for (let y = 0; y < height; y++) {
-    mask[y] = [];
     for (let x = 0; x < width; x++) {
       const i = (y * width + x) * 4;
-      mask[y][x] = rgbToSkin(data[i], data[i + 1], data[i + 2]);
+      values[y][x] = 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
     }
   }
-
-  return mask;
+  return { values, width, height };
 }
 
-function getBounds(mask: boolean[][]): Bounds | null {
-  const height = mask.length;
-  const width = mask[0].length;
-  let top = height;
-  let bottom = 0;
-  let left = width;
-  let right = 0;
-  let count = 0;
+function skinMask(imageData: ImageData): boolean[][] {
+  const { data, width, height } = imageData;
+  return Array.from({ length: height }, (_, y) => Array.from({ length: width }, (_, x) => {
+    const i = (y * width + x) * 4;
+    return rgbToSkin(data[i], data[i + 1], data[i + 2]);
+  }));
+}
 
+function maskBounds(mask: boolean[][]): Bounds | null {
+  const height = mask.length;
+  const width = mask[0]?.length ?? 0;
+  let top = height; let left = width; let right = -1; let bottom = -1; let count = 0;
   for (let y = 0; y < height; y++) {
     for (let x = 0; x < width; x++) {
       if (!mask[y][x]) continue;
-      top = Math.min(top, y);
-      bottom = Math.max(bottom, y);
-      left = Math.min(left, x);
-      right = Math.max(right, x);
       count++;
+      top = Math.min(top, y); bottom = Math.max(bottom, y);
+      left = Math.min(left, x); right = Math.max(right, x);
     }
   }
-
-  const coverage = count / (width * height);
-  // Reject almost-empty frames and frames where the whole background is
-  // classified as skin. In both cases manual calibration is safer.
-  if (coverage < 0.06 || coverage > 0.92) return null;
-  return { top, bottom, left, right, width: right - left, height: bottom - top };
+  const coverage = width * height ? count / (width * height) : 0;
+  if (right < 0 || coverage < 0.045 || coverage > 0.88) return null;
+  return { top, bottom, left, right, width: right - left, height: bottom - top, imageWidth: width, imageHeight: height, coverage };
 }
 
 function countMask(mask: boolean[][], x1: number, y1: number, x2: number, y2: number): number {
-  const height = mask.length;
+  let total = 0;
   const width = mask[0].length;
-  let count = 0;
-
-  const startX = Math.max(0, Math.floor(x1));
-  const endX = Math.min(width, Math.ceil(x2));
-  const startY = Math.max(0, Math.floor(y1));
-  const endY = Math.min(height, Math.ceil(y2));
-
-  for (let y = startY; y < endY; y++) {
-    for (let x = startX; x < endX; x++) {
-      if (mask[y][x]) count++;
-    }
+  for (let y = Math.max(0, Math.floor(y1)); y < Math.min(mask.length, Math.ceil(y2)); y++) {
+    for (let x = Math.max(0, Math.floor(x1)); x < Math.min(width, Math.ceil(x2)); x++) total += mask[y][x] ? 1 : 0;
   }
-
-  return count;
+  return total;
 }
 
-function detectFingerDirection(mask: boolean[][], bounds: Bounds): Direction {
-  const band = 0.24;
+function estimateFingerDirection(mask: boolean[][], bounds: Bounds): Direction {
   const { left, right, top, bottom, width, height } = bounds;
-
-  if (width >= height * 1.12) {
-    const leftDensity = countMask(mask, left, top, left + width * band, bottom) / (width * band * height || 1);
-    const rightDensity = countMask(mask, right - width * band, top, right, bottom) / (width * band * height || 1);
-    return leftDensity <= rightDensity ? "left" : "right";
-  }
-
-  const topDensity = countMask(mask, left, top, right, top + height * band) / (width * height * band || 1);
-  const bottomDensity = countMask(mask, left, bottom - height * band, right, bottom) / (width * height * band || 1);
-  return topDensity <= bottomDensity ? "up" : "down";
+  const topBand = countMask(mask, left, top, right + 1, top + height * 0.2) / Math.max(1, width * height * 0.2);
+  const bottomBand = countMask(mask, left, bottom - height * 0.2, right + 1, bottom + 1) / Math.max(1, width * height * 0.2);
+  if (topBand >= bottomBand * 0.78) return "up";
+  if (bottomBand >= topBand * 1.35) return "down";
+  return height >= width ? "up" : "right";
 }
 
-function toGrayscale(imageData: ImageData): number[][] {
-  const { data, width, height } = imageData;
-  const gray: number[][] = [];
-
-  for (let y = 0; y < height; y++) {
-    gray[y] = [];
-    for (let x = 0; x < width; x++) {
-      const i = (y * width + x) * 4;
-      gray[y][x] = 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
+function buildGrayIntegral(gray: GrayImage): number[][] {
+  const integral = Array.from({ length: gray.height + 1 }, () => Array<number>(gray.width + 1).fill(0));
+  for (let y = 1; y <= gray.height; y++) {
+    let row = 0;
+    for (let x = 1; x <= gray.width; x++) {
+      row += gray.values[y - 1][x - 1];
+      integral[y][x] = integral[y - 1][x] + row;
     }
   }
-
-  return gray;
+  return integral;
 }
 
-function sobel(gray: number[][]): number[][] {
-  const height = gray.length;
-  const width = gray[0].length;
-  const edges: number[][] = [];
-  const gx = [[-1, 0, 1], [-2, 0, 2], [-1, 0, 1]];
-  const gy = [[-1, -2, -1], [0, 0, 0], [1, 2, 1]];
-
-  for (let y = 0; y < height; y++) {
-    edges[y] = [];
-    for (let x = 0; x < width; x++) {
-      let sx = 0;
-      let sy = 0;
-
-      for (let ky = -1; ky <= 1; ky++) {
-        for (let kx = -1; kx <= 1; kx++) {
-          const px = x + kx;
-          const py = y + ky;
-          if (px < 0 || px >= width || py < 0 || py >= height) continue;
-          sx += gray[py][px] * gx[ky + 1][kx + 1];
-          sy += gray[py][px] * gy[ky + 1][kx + 1];
-        }
-      }
-
-      edges[y][x] = Math.sqrt(sx * sx + sy * sy);
-    }
-  }
-
-  return edges;
+function areaMean(integral: number[][], x: number, y: number, radius: number): number {
+  const h = integral.length - 1; const w = integral[0].length - 1;
+  const x1 = Math.max(0, Math.floor(x - radius)); const y1 = Math.max(0, Math.floor(y - radius));
+  const x2 = Math.min(w, Math.ceil(x + radius + 1)); const y2 = Math.min(h, Math.ceil(y + radius + 1));
+  const area = Math.max(1, (x2 - x1) * (y2 - y1));
+  return (integral[y2][x2] - integral[y1][x2] - integral[y2][x1] + integral[y1][x1]) / area;
 }
 
-function localContrast(gray: number[][], x: number, y: number): number {
-  const height = gray.length;
-  const width = gray[0].length;
-  const center = gray[y][x];
-  let ringTotal = 0;
-  let ringCount = 0;
-  for (let oy = -4; oy <= 4; oy++) {
-    for (let ox = -4; ox <= 4; ox++) {
-      if (Math.abs(ox) < 2 && Math.abs(oy) < 2) continue;
-      const px = x + ox;
-      const py = y + oy;
-      if (px >= 0 && px < width && py >= 0 && py < height) {
-        ringTotal += gray[py][px];
-        ringCount++;
-      }
-    }
-  }
-  return ringCount ? ringTotal / ringCount - center : 0;
+function edgeStrength(gray: GrayImage, x: number, y: number): number {
+  const px = (xx: number, yy: number) => gray.values[Math.max(0, Math.min(gray.height - 1, yy))][Math.max(0, Math.min(gray.width - 1, xx))];
+  return Math.abs(px(x + 1, y) - px(x - 1, y)) + Math.abs(px(x, y + 1) - px(x, y - 1));
 }
 
-function refinePoint(gray: number[][], edges: number[][], candidate: Point, radius: number): Point {
-  const size = edges.length;
-  const cx = (candidate.x / 500) * size;
-  const cy = (candidate.y / 500) * size;
-  let bestX = cx;
-  let bestY = cy;
-  let bestScore = -1;
-
-  for (let y = Math.floor(cy - radius); y <= Math.ceil(cy + radius); y++) {
-    for (let x = Math.floor(cx - radius); x <= Math.ceil(cx + radius); x++) {
-      if (x < 0 || x >= size || y < 0 || y >= size) continue;
-      const distance = Math.hypot(x - cx, y - cy);
-      // Palm creases are usually darker than their immediate skin ring and
-      // also produce an edge response. Combining both signals is more stable
-      // than following the strongest global Sobel pixel (often a finger edge).
-      const score = localContrast(gray, x, y) * 2.2 + edges[y][x] * 0.65 - distance * 2.2;
-      if (score > bestScore) {
-        bestScore = score;
-        bestX = x;
-        bestY = y;
-      }
-    }
-  }
-
-  return point((bestX / size) * 500, (bestY / size) * 500);
+function creaseScore(gray: GrayImage, integral: number[][], x: number, y: number, normal: Vec): number {
+  const cx = Math.round(x); const cy = Math.round(y);
+  const center = areaMean(integral, cx, cy, 1.3);
+  const ringA = areaMean(integral, cx + normal.x * 5, cy + normal.y * 5, 2.5);
+  const ringB = areaMean(integral, cx - normal.x * 5, cy - normal.y * 5, 2.5);
+  return ((ringA + ringB) / 2 - center) * 1.9 + edgeStrength(gray, cx, cy) * 0.18;
 }
 
 function quadratic(a: Point, b: Point, c: Point, t: number): Point {
@@ -241,131 +122,91 @@ function quadratic(a: Point, b: Point, c: Point, t: number): Point {
   return point(u * u * a.x + 2 * u * t * b.x + t * t * c.x, u * u * a.y + 2 * u * t * b.y + t * t * c.y);
 }
 
-function traceCrease(gray: number[][], edges: number[][], line: { start: Point; control: Point; end: Point }, radius: number): LinesState["heart"] {
-  const samples: Point[] = [];
-  for (let index = 0; index <= 8; index++) {
-    const t = index / 8;
-    const base = quadratic(line.start, line.control, line.end, t);
-    const before = quadratic(line.start, line.control, line.end, Math.max(0, t - 0.05));
-    const after = quadratic(line.start, line.control, line.end, Math.min(1, t + 0.05));
-    const tangent = { x: after.x - before.x, y: after.y - before.y };
-    const length = Math.hypot(tangent.x, tangent.y) || 1;
-    const normal = { x: -tangent.y / length, y: tangent.x / length };
-    let best = base;
-    let bestScore = -Infinity;
-    for (let offset = -radius; offset <= radius; offset += Math.max(3, radius / 3)) {
-      const candidate = point(base.x + normal.x * offset, base.y + normal.y * offset);
-      const refined = refinePoint(gray, edges, candidate, Math.max(3, Math.floor(radius / 3)));
-      const pixelX = Math.max(0, Math.min(edges.length - 1, Math.round((refined.x / 500) * edges.length)));
-      const pixelY = Math.max(0, Math.min(edges.length - 1, Math.round((refined.y / 500) * edges.length)));
-      const score = localContrast(gray, pixelX, pixelY);
-      if (score > bestScore) { bestScore = score; best = refined; }
-    }
-    samples.push(best);
-  }
-  return { start: samples[0], control: samples[4], end: samples[8] };
+function project(center: Point, thumbAxis: Vec, fingerAxis: Vec, across: number, along: number, xScale: number, yScale: number): Point {
+  return point(center.x + thumbAxis.x * across * xScale + fingerAxis.x * along * yScale, center.y + thumbAxis.y * across * xScale + fingerAxis.y * along * yScale);
 }
 
-function buildAnatomicalLines(hand: Hand, fingerDirection: Direction, bounds: Bounds | null): LinesState {
-  const center = point(250, 250);
-  const fingerAxis = directionToVector(fingerDirection);
-  // Palm-up view: the right thumb appears on the viewer's left, while the
-  // left thumb appears on the viewer's right. Keep the calibration overlay
-  // aligned with the actual selected hand.
+function buildPalmTemplate(hand: Hand, direction: Direction, bounds: Bounds | null): LinesState {
+  const fingerAxis = directionVector(direction);
   const thumbAxis = hand === "right" ? rotateCounterClockwise(fingerAxis) : rotateClockwise(fingerAxis);
-
-  const sizeScale = bounds
-    ? clamp(Math.max(bounds.width, bounds.height) / 500, 0.78, 1.08)
-    : 1;
-  const across = sizeScale;
-  const along = sizeScale;
-
+  const center = bounds ? point(((bounds.left + bounds.right) / 2 / bounds.imageWidth) * 500, ((bounds.top + bounds.bottom) / 2 / bounds.imageHeight) * 500) : point(250, 250);
+  const scaleX = bounds ? Math.max(.68, Math.min(1.18, bounds.width / 290)) : 1;
+  const scaleY = bounds ? Math.max(.68, Math.min(1.18, bounds.height / 430)) : 1;
   return {
-    heart: {
-      start: project(center, thumbAxis, fingerAxis, -142 * across, 74 * along),
-      control: project(center, thumbAxis, fingerAxis, -34 * across, 92 * along),
-      end: project(center, thumbAxis, fingerAxis, 82 * across, 124 * along),
-    },
-    head: {
-      start: project(center, thumbAxis, fingerAxis, 112 * across, 24 * along),
-      control: project(center, thumbAxis, fingerAxis, -14 * across, -32 * along),
-      end: project(center, thumbAxis, fingerAxis, -158 * across, -86 * along),
-    },
-    life: {
-      start: project(center, thumbAxis, fingerAxis, 118 * across, 34 * along),
-      control: project(center, thumbAxis, fingerAxis, -82 * across, -58 * along),
-      end: project(center, thumbAxis, fingerAxis, -18 * across, -174 * along),
-    },
-    fate: {
-      start: project(center, thumbAxis, fingerAxis, -10 * across, -176 * along),
-      control: project(center, thumbAxis, fingerAxis, 8 * across, -38 * along),
-      end: project(center, thumbAxis, fingerAxis, 4 * across, 112 * along),
-    },
+    heart: { start: project(center, thumbAxis, fingerAxis, -142, 74, scaleX, scaleY), control: project(center, thumbAxis, fingerAxis, -34, 92, scaleX, scaleY), end: project(center, thumbAxis, fingerAxis, 82, 124, scaleX, scaleY) },
+    head: { start: project(center, thumbAxis, fingerAxis, 112, 24, scaleX, scaleY), control: project(center, thumbAxis, fingerAxis, -14, -32, scaleX, scaleY), end: project(center, thumbAxis, fingerAxis, -158, -86, scaleX, scaleY) },
+    life: { start: project(center, thumbAxis, fingerAxis, 118, 34, scaleX, scaleY), control: project(center, thumbAxis, fingerAxis, -82, -58, scaleX, scaleY), end: project(center, thumbAxis, fingerAxis, -18, -174, scaleX, scaleY) },
+    fate: { start: project(center, thumbAxis, fingerAxis, -10, -176, scaleX, scaleY), control: project(center, thumbAxis, fingerAxis, 8, -38, scaleX, scaleY), end: project(center, thumbAxis, fingerAxis, 4, 112, scaleX, scaleY) },
   };
 }
 
-function refineLines(imageData: ImageData, lines: LinesState): LinesState {
-  const gray = toGrayscale(imageData);
-  const edges = sobel(gray);
-  const radius = Math.max(10, Math.floor(imageData.width * 0.035));
+function traceLine(gray: GrayImage, integral: number[][], line: LinesState["heart"], radius: number): LinesState["heart"] {
+  const samples: Point[] = [];
+  let previous: Point | null = null;
+  for (let i = 0; i <= 10; i++) {
+    const t = i / 10;
+    const base = quadratic(line.start, line.control, line.end, t);
+    const before = quadratic(line.start, line.control, line.end, Math.max(0, t - .04));
+    const after = quadratic(line.start, line.control, line.end, Math.min(1, t + .04));
+    const tangent = { x: after.x - before.x, y: after.y - before.y };
+    const length = Math.hypot(tangent.x, tangent.y) || 1;
+    const normal = { x: -tangent.y / length, y: tangent.x / length };
+    let best = base; let bestScore = -Infinity;
+    for (let offset = -radius; offset <= radius; offset += Math.max(3, radius / 4)) {
+      const candidate = { x: base.x + normal.x * offset, y: base.y + normal.y * offset };
+      const px = (candidate.x / 500) * gray.width; const py = (candidate.y / 500) * gray.height;
+      const score = creaseScore(gray, integral, px, py, normal) - (previous ? Math.hypot(candidate.x - previous.x, candidate.y - previous.y) * .035 : 0);
+      if (score > bestScore) { bestScore = score; best = point(candidate.x, candidate.y); }
+    }
+    samples.push(best); previous = best;
+  }
+  return { start: samples[0], control: samples[5], end: samples[10] };
+}
 
-  // Trace each crease along its whole path. A point-only search can jump to a
-  // nearby finger edge; path tracing keeps the result anatomically coherent.
+function refineLines(imageData: ImageData, template: LinesState): LinesState {
+  const gray = buildGray(imageData);
+  const integral = buildGrayIntegral(gray);
+  const radius = Math.max(7, Math.round(gray.width * .025));
   return {
-    heart: traceCrease(gray, edges, lines.heart, radius),
-    head: traceCrease(gray, edges, lines.head, radius),
-    life: traceCrease(gray, edges, lines.life, radius),
-    fate: traceCrease(gray, edges, lines.fate, radius),
+    heart: traceLine(gray, integral, template.heart, radius),
+    head: traceLine(gray, integral, template.head, radius),
+    life: traceLine(gray, integral, template.life, radius),
+    fate: traceLine(gray, integral, template.fate, radius),
   };
 }
 
 export const defaultLinesForHand: Record<Hand, LinesState> = {
-  left: buildAnatomicalLines("left", "up", null),
-  right: buildAnatomicalLines("right", "up", null),
+  left: buildPalmTemplate("left", "up", null),
+  right: buildPalmTemplate("right", "up", null),
 };
 
 export function autoDetectLines(imageDataUrl: string, hand: Hand = "right"): Promise<LinesState | null> {
   return new Promise((resolve) => {
-    const img = document.createElement("img") as HTMLImageElement;
-
-    img.onload = () => {
+    const image = document.createElement("img");
+    image.onload = () => {
       try {
-        const cropSize = Math.min(img.width, img.height);
-        if (cropSize < 160) {
-          resolve(null);
-          return;
-        }
-        const canvas = document.createElement("canvas");
-        // Keep analysis responsive on high-resolution phone photos while
-        // retaining enough detail for local edge refinement.
-        const analysisSize = Math.min(cropSize, 480);
-        canvas.width = analysisSize;
-        canvas.height = analysisSize;
-
-        const ctx = canvas.getContext("2d");
-        if (!ctx) {
-          resolve(null);
-          return;
-        }
-
-        const sx = (img.width - cropSize) / 2;
-        const sy = (img.height - cropSize) / 2;
-        ctx.drawImage(img, sx, sy, cropSize, cropSize, 0, 0, analysisSize, analysisSize);
-
-        const imageData = ctx.getImageData(0, 0, analysisSize, analysisSize);
-        const mask = getSkinMask(imageData);
-        const bounds = getBounds(mask);
-        const direction = bounds ? detectFingerDirection(mask, bounds) : "up";
-        const anatomical = buildAnatomicalLines(hand, direction, bounds);
-
-        resolve(refineLines(imageData, anatomical));
+        const cropSize = Math.min(image.naturalWidth || image.width, image.naturalHeight || image.height);
+        if (cropSize < 180) { resolve(null); return; }
+        const size = Math.min(512, cropSize);
+        const canvas = document.createElement("canvas"); canvas.width = size; canvas.height = size;
+        const ctx = canvas.getContext("2d", { willReadFrequently: true });
+        if (!ctx) { resolve(null); return; }
+        const sx = ((image.naturalWidth || image.width) - cropSize) / 2;
+        const sy = ((image.naturalHeight || image.height) - cropSize) / 2;
+        ctx.drawImage(image, sx, sy, cropSize, cropSize, 0, 0, size, size);
+        const data = ctx.getImageData(0, 0, size, size);
+        const mask = skinMask(data);
+        const bounds = maskBounds(mask);
+        if (!bounds || bounds.width < size * .25 || bounds.height < size * .3) { resolve(null); return; }
+        const direction = estimateFingerDirection(mask, bounds);
+        const template = buildPalmTemplate(hand, direction, bounds);
+        resolve(refineLines(data, template));
       } catch (error) {
-        console.error("Ошибка авто-определения:", error);
+        console.warn("Автоанализ ладони недоступен, используется ручная калибровка", error);
         resolve(null);
       }
     };
-
-    img.onerror = () => resolve(null);
-    img.src = imageDataUrl;
+    image.onerror = () => resolve(null);
+    image.src = imageDataUrl;
   });
 }

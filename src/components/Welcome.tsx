@@ -14,7 +14,7 @@ export default function Welcome({ onStart }: WelcomeProps) {
   };
 
   return (
-    <section className="relative isolate flex min-h-[calc(100svh-73px)] items-center overflow-hidden bg-[#160f18] text-white">
+    <section className="relative isolate flex min-h-[calc(100svh-73px)] items-start overflow-hidden bg-[#160f18] text-white">
       <img
         src="/hero-chiromant.jpg"
         alt="Хиромантка читает линии ладони в мистической библиотеке"
@@ -26,8 +26,12 @@ export default function Welcome({ onStart }: WelcomeProps) {
       <div className="magic-orbit magic-orbit-two" aria-hidden="true" />
       <div className="magic-dust magic-dust-one" aria-hidden="true" />
       <div className="magic-dust magic-dust-two" aria-hidden="true" />
+      <div className="magic-sigil" aria-hidden="true"><span>✦</span></div>
+      <div className="magic-rays" aria-hidden="true" />
+      <div className="magic-glow" aria-hidden="true" />
+      <div className="magic-stars" aria-hidden="true">{Array.from({ length: 9 }, (_, index) => <i key={index} style={{ "--star-index": index } as React.CSSProperties} />)}</div>
 
-      <div className="mx-auto w-full max-w-6xl px-5 pb-14 pt-16 sm:px-8 sm:pb-20 sm:pt-20 lg:px-12">
+      <div className="relative z-10 mx-auto w-full max-w-6xl px-5 pb-14 pt-8 sm:px-8 sm:pb-20 sm:pt-12 lg:px-12">
         <div className="max-w-xl">
           <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-white/25 bg-black/20 px-3 py-1.5 text-[10px] font-medium uppercase tracking-[0.24em] text-white/75 backdrop-blur-sm">
             <Eye size={14} strokeWidth={1.4} />
