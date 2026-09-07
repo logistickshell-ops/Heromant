@@ -15,7 +15,16 @@ export default function HandArtwork({ lines, name }: HandArtworkProps) {
   const buildSVGString = (): string => {
     const ns = "http://www.w3.org/2000/svg";
     return `<svg xmlns="${ns}" viewBox="0 0 500 500" width="500" height="500">
-  <rect width="500" height="500" fill="#111111"/>
+  <defs><radialGradient id="bg" cx="50%" cy="45%"><stop offset="0" stop-color="#31263b"/><stop offset="0.72" stop-color="#16101d"/><stop offset="1" stop-color="#08070c"/></radialGradient><filter id="glow"><feGaussianBlur stdDeviation="5"/></filter><clipPath id="disc"><circle cx="250" cy="250" r="226"/></clipPath></defs>
+  <rect width="500" height="500" fill="#09070d"/>
+  <circle cx="250" cy="250" r="232" fill="url(#bg)" stroke="#d5a74b" stroke-width="2"/>
+  <circle cx="250" cy="250" r="222" fill="none" stroke="#8f6730" stroke-width="1" stroke-dasharray="2 8"/>
+  <circle cx="250" cy="250" r="214" fill="none" stroke="#f3d486" stroke-opacity=".45" stroke-width="1"/>
+  <g clip-path="url(#disc)">
+    <circle cx="250" cy="250" r="170" fill="none" stroke="#d7ad58" stroke-opacity=".14" stroke-width="1"/>
+    <path d="M250 28v28M250 444v28M28 250h28M444 250h28" stroke="#f3d486" stroke-opacity=".55" stroke-width="2"/>
+    <path d="M93 93l20 20M387 93l-20 20M93 407l20-20M387 407l-20-20" stroke="#f3d486" stroke-opacity=".35" stroke-width="2"/>
+    <circle cx="250" cy="250" r="180" fill="none" stroke="#f6c96b" stroke-opacity=".35" stroke-width="10" filter="url(#glow)"/>
   <path d="M 120 400 C 100 350, 70 250, 90 200 C 100 170, 120 150, 130 180 C 140 210, 150 140, 165 110 C 175 90, 195 90, 200 120 C 210 150, 220 120, 235 80 C 245 50, 270 50, 275 80 C 285 130, 290 110, 310 90 C 320 70, 345 70, 345 100 C 345 130, 340 180, 360 150 C 375 130, 395 140, 390 180 C 380 250, 410 320, 390 380 C 370 430, 300 460, 240 460 C 180 460, 140 430, 120 400 Z" fill="none" stroke="rgba(255,255,255,0.04)" stroke-width="1.5"/>
   <path d="M ${lines.heart.start.x} ${lines.heart.start.y} Q ${lines.heart.control.x} ${lines.heart.control.y} ${lines.heart.end.x} ${lines.heart.end.y}" fill="none" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round"/>
   <path d="M ${lines.head.start.x} ${lines.head.start.y} Q ${lines.head.control.x} ${lines.head.control.y} ${lines.head.end.x} ${lines.head.end.y}" fill="none" stroke="#E5E7EB" stroke-width="2.5" stroke-opacity="0.85" stroke-linecap="round"/>
@@ -25,7 +34,7 @@ export default function HandArtwork({ lines, name }: HandArtworkProps) {
   <circle cx="${lines.heart.end.x}" cy="${lines.heart.end.y}" r="2" fill="#fff"/>
   <circle cx="${lines.head.end.x}" cy="${lines.head.end.y}" r="2" fill="#fff"/>
   <circle cx="${lines.life.end.x}" cy="${lines.life.end.y}" r="2" fill="#fff"/>
-  <text x="250" y="485" text-anchor="middle" fill="rgba(255,255,255,0.4)" font-size="10" letter-spacing="3">ХИРОМАНТИЯ</text>
+  </g><text x="250" y="488" text-anchor="middle" fill="#f3d486" fill-opacity=".65" font-size="10" letter-spacing="3">ХИРОМАНТИЯ</text>
 </svg>`;
   };
 
@@ -100,22 +109,30 @@ export default function HandArtwork({ lines, name }: HandArtworkProps) {
       </div>
 
       {/* SVG Artwork container */}
-      <div className="w-full aspect-square bg-[#0F0F0F] rounded-2xl p-4 relative overflow-hidden border border-zinc-800 flex items-center justify-center">
+      <div className="relative aspect-square w-full overflow-hidden rounded-[2rem] border border-amber-500/30 bg-[#09070d] p-2 shadow-[0_0_45px_rgba(212,160,66,0.18)] flex items-center justify-center">
         {/* Sacred Geometry Background */}
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-20">
-          <div className="w-64 h-64 border border-zinc-400 rounded-full flex items-center justify-center">
-            <div className="w-48 h-48 border border-dashed border-zinc-500 rounded-full flex items-center justify-center animate-spin-slow">
-              <div className="w-32 h-32 border border-zinc-600 rounded-full"></div>
-            </div>
-          </div>
-        </div>
+        <div className="pointer-events-none absolute inset-0 flex items-center justify-center opacity-30"><div className="h-[92%] w-[92%] rounded-full border border-amber-300/60" /><div className="absolute h-[82%] w-[82%] rounded-full border border-dashed border-amber-200/40 animate-spin-slow" /></div>
 
         {/* The Art */}
         <svg
           ref={artworkRef}
           viewBox="0 0 500 500"
-          className="w-full h-full relative z-10 drop-shadow-[0_0_15px_rgba(255,255,255,0.15)]"
+          className="relative z-10 h-full w-full rounded-full drop-shadow-[0_0_20px_rgba(245,190,80,0.28)]"
+          style={{ clipPath: "circle(47% at 50% 50%)" }}
         >
+          <defs>
+            <radialGradient id="vignette-bg" cx="50%" cy="45%">
+              <stop offset="0%" stopColor="#382b45" />
+              <stop offset="72%" stopColor="#17111f" />
+              <stop offset="100%" stopColor="#08070c" />
+            </radialGradient>
+            <filter id="vignette-glow"><feGaussianBlur stdDeviation="7" /></filter>
+          </defs>
+          <circle cx="250" cy="250" r="250" fill="url(#vignette-bg)" />
+          <circle cx="250" cy="250" r="226" fill="none" stroke="#d5a74b" strokeWidth="2" />
+          <circle cx="250" cy="250" r="216" fill="none" stroke="#f3d486" strokeOpacity=".45" strokeWidth="1" />
+          <circle cx="250" cy="250" r="184" fill="none" stroke="#f6c96b" strokeOpacity=".35" strokeWidth="10" filter="url(#vignette-glow)" />
+          <path d="M250 24v30M250 446v30M24 250h30M446 250h30M90 90l22 22M410 90l-22 22M90 410l22-22M410 410l-22-22" stroke="#f3d486" strokeOpacity=".55" strokeWidth="2" />
           {/* Subtle Hand Outline Silhouette */}
           <path
             d="M 120 400 C 100 350, 70 250, 90 200 C 100 170, 120 150, 130 180 C 140 210, 150 140, 165 110 C 175 90, 195 90, 200 120 C 210 150, 220 120, 235 80 C 245 50, 270 50, 275 80 C 285 130, 290 110, 310 90 C 320 70, 345 70, 345 100 C 345 130, 340 180, 360 150 C 375 130, 395 140, 390 180 C 380 250, 410 320, 390 380 C 370 430, 300 460, 240 460 C 180 460, 140 430, 120 400 Z"

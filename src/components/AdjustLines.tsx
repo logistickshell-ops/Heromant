@@ -248,7 +248,7 @@ export default function AdjustLines({ image, hand, onConfirm, onBack }: AdjustLi
         <img
           src={image}
           alt="Ладонь"
-          className="absolute inset-0 w-full h-full object-cover select-none filter grayscale opacity-40 brightness-110 contrast-125"
+          className="absolute inset-0 w-full h-full object-cover select-none grayscale opacity-80 contrast-150"
         />
 
         {/* SVG overlay for lines and interactive points */}
