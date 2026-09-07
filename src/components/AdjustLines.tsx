@@ -33,6 +33,9 @@ export default function AdjustLines({ image, hand, onConfirm, onBack }: AdjustLi
 
   // Дефолтные позиции линий - зависят от руки
   const defaultLines: LinesState = defaultLinesForHand[hand];
+  // Manual mode intentionally starts from the opposite hand template so the
+  // user can compare the two palm layouts before placing the points by hand.
+  const manualLines: LinesState = defaultLinesForHand[hand === "left" ? "right" : "left"];
 
   useEffect(() => {
     if (!isDetecting) return;
@@ -69,7 +72,7 @@ export default function AdjustLines({ image, hand, onConfirm, onBack }: AdjustLi
   const switchMode = (newMode: "auto" | "manual") => {
     setMode(newMode);
     if (newMode === "manual") {
-      setLines(defaultLines);
+      setLines(manualLines);
     } else {
       setIsDetecting(true);
       setDetectError(false);

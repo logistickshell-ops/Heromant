@@ -142,43 +142,16 @@ export default function HandArtwork({ lines, name }: HandArtworkProps) {
           />
 
           {/* Lines */}
-          <path
-            d={`M ${lines.heart.start.x} ${lines.heart.start.y} Q ${lines.heart.control.x} ${lines.heart.control.y} ${lines.heart.end.x} ${lines.heart.end.y}`}
-            fill="none"
-            stroke="#FFFFFF"
-            strokeWidth="3"
-            strokeLinecap="round"
-          />
-          <path
-            d={`M ${lines.head.start.x} ${lines.head.start.y} Q ${lines.head.control.x} ${lines.head.control.y} ${lines.head.end.x} ${lines.head.end.y}`}
-            fill="none"
-            stroke="#E5E7EB"
-            strokeWidth="2.5"
-            strokeOpacity="0.85"
-            strokeLinecap="round"
-          />
-          <path
-            d={`M ${lines.life.start.x} ${lines.life.start.y} Q ${lines.life.control.x} ${lines.life.control.y} ${lines.life.end.x} ${lines.life.end.y}`}
-            fill="none"
-            stroke="#D1D5DB"
-            strokeWidth="2.5"
-            strokeOpacity="0.85"
-            strokeLinecap="round"
-          />
-          <path
-            d={`M ${lines.fate.start.x} ${lines.fate.start.y} Q ${lines.fate.control.x} ${lines.fate.control.y} ${lines.fate.end.x} ${lines.fate.end.y}`}
-            fill="none"
-            stroke="#9CA3AF"
-            strokeWidth="2"
-            strokeOpacity="0.7"
-            strokeLinecap="round"
-          />
+          <g transform="translate(-7 5) translate(250 250) scale(.94) translate(-250 -250)" filter="url(#vignette-glow)"><path d={`M ${lines.heart.start.x} ${lines.heart.start.y} Q ${lines.heart.control.x} ${lines.heart.control.y} ${lines.heart.end.x} ${lines.heart.end.y}`} fill="none" stroke="#fb7185" strokeWidth="7" strokeOpacity=".28" strokeLinecap="round" /></g>
+          <g transform="translate(-7 5) translate(250 250) scale(.94) translate(-250 -250)"><path d={`M ${lines.heart.start.x} ${lines.heart.start.y} Q ${lines.heart.control.x} ${lines.heart.control.y} ${lines.heart.end.x} ${lines.heart.end.y}`} fill="none" stroke="#fecdd3" strokeWidth="2.8" strokeLinecap="round" /></g>
+          <g transform="translate(6 8) translate(250 250) scale(.9) translate(-250 -250)"><path d={`M ${lines.head.start.x} ${lines.head.start.y} Q ${lines.head.control.x} ${lines.head.control.y} ${lines.head.end.x} ${lines.head.end.y}`} fill="none" stroke="#93c5fd" strokeWidth="2.6" strokeOpacity=".95" strokeLinecap="round" /></g>
+          <g transform="translate(9 -5) translate(250 250) scale(.88) translate(-250 -250)"><path d={`M ${lines.life.start.x} ${lines.life.start.y} Q ${lines.life.control.x} ${lines.life.control.y} ${lines.life.end.x} ${lines.life.end.y}`} fill="none" stroke="#86efac" strokeWidth="2.6" strokeOpacity=".95" strokeLinecap="round" /></g>
+          <g transform="translate(-3 -10) translate(250 250) scale(.9) translate(-250 -250)"><path d={`M ${lines.fate.start.x} ${lines.fate.start.y} Q ${lines.fate.control.x} ${lines.fate.control.y} ${lines.fate.end.x} ${lines.fate.end.y}`} fill="none" stroke="#c4b5fd" strokeWidth="2.2" strokeOpacity=".9" strokeDasharray="5 4" strokeLinecap="round" /></g>
 
-          {/* Star markers */}
-          <circle cx={lines.heart.start.x} cy={lines.heart.start.y} r="2" fill="#fff" />
-          <circle cx={lines.heart.end.x} cy={lines.heart.end.y} r="2" fill="#fff" />
-          <circle cx={lines.head.end.x} cy={lines.head.end.y} r="2" fill="#fff" />
-          <circle cx={lines.life.end.x} cy={lines.life.end.y} r="2" fill="#fff" />
+          {/* Star markers follow the same offsets as their lines. */}
+          <g transform="translate(-7 5) translate(250 250) scale(.94) translate(-250 -250)"><circle cx={lines.heart.start.x} cy={lines.heart.start.y} r="3" fill="#fecdd3" /><circle cx={lines.heart.end.x} cy={lines.heart.end.y} r="3" fill="#fecdd3" /></g>
+          <g transform="translate(6 8) translate(250 250) scale(.9) translate(-250 -250)"><circle cx={lines.head.end.x} cy={lines.head.end.y} r="2.5" fill="#bfdbfe" /></g>
+          <g transform="translate(9 -5) translate(250 250) scale(.88) translate(-250 -250)"><circle cx={lines.life.end.x} cy={lines.life.end.y} r="2.5" fill="#bbf7d0" /></g>
 
           <text x="250" y="485" textAnchor="middle" fill="rgba(255,255,255,0.4)" fontSize="10" letterSpacing="3">
             ХИРОМАНТИЯ

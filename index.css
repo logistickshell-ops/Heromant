@@ -1,0 +1,57 @@
+@import "tailwindcss";
+
+@keyframes spin-slow {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin-slow {
+  animation: spin-slow 20s linear infinite;
+}
+
+@keyframes portal-in {
+  from { opacity: 0; transform: scale(.985) translateY(12px); filter: blur(8px); }
+  to { opacity: 1; transform: scale(1) translateY(0); filter: blur(0); }
+}
+
+@keyframes portal-ring-in {
+  from { opacity: 0; transform: scale(.25) rotate(-30deg); }
+  55% { opacity: .26; }
+  to { opacity: 0; transform: scale(1.25) rotate(30deg); }
+}
+
+.step-portal {
+  animation: portal-in 650ms cubic-bezier(.22,.8,.24,1) both;
+  isolation: isolate;
+}
+
+.portal-ring {
+  position: absolute;
+  z-index: -1;
+  left: 50%;
+  top: 50%;
+  width: min(72vw, 620px);
+  aspect-ratio: 1;
+  pointer-events: none;
+  border: 1px solid rgba(180, 142, 64, .3);
+  border-radius: 50%;
+  box-shadow: 0 0 55px rgba(139, 92, 246, .12), inset 0 0 35px rgba(245, 158, 11, .08);
+  transform: translate(-50%, -50%);
+  animation: portal-ring-in 900ms ease-out both;
+}
+
+.portal-ring-two {
+  width: min(52vw, 440px);
+  border-style: dashed;
+  border-color: rgba(167, 139, 250, .25);
+  animation-delay: 80ms;
+  animation-duration: 1100ms;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .step-portal, .portal-ring { animation: none; }
+}
