@@ -1,4 +1,4 @@
-import { ArrowRight, Check } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check } from "lucide-react";
 
 type Hand = "left" | "right";
 
@@ -6,6 +6,7 @@ interface HandSelectionProps {
   hand: Hand | null;
   onSelect: (hand: Hand) => void;
   onContinue: () => void;
+  onBack: () => void;
 }
 
 const lineColors = { heart: "#fb7185", head: "#60a5fa", life: "#34d399", fate: "#a78bfa" };
@@ -28,10 +29,10 @@ function PalmIllustration({ side, selected }: { side: Hand; selected: boolean })
   );
 }
 
-export default function HandSelection({ hand, onSelect, onContinue }: HandSelectionProps) {
+export default function HandSelection({ hand, onSelect, onContinue, onBack }: HandSelectionProps) {
   return (
     <section className="mx-auto flex min-h-[65vh] w-full max-w-2xl flex-col items-center justify-center bg-[#fdfdfb] px-4 py-7 text-[#111111] sm:py-9">
-      <div className="mb-5 text-center sm:mb-7">
+      <div className="mb-5 w-full text-center sm:mb-7"><button type="button" onClick={onBack} className="mb-5 inline-flex items-center gap-2 rounded-full border border-zinc-200 px-4 py-2 text-xs text-zinc-600 hover:bg-zinc-50"><ArrowLeft size={14} /> К снимку</button>
         <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.28em] text-zinc-400">Шаг 2 из 4</p>
         <h2 className="text-2xl font-light uppercase tracking-[0.16em] text-zinc-800">Выберите ладонь</h2>
         <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-zinc-500">Положите ладонь вверх, пальцы расслабьте и выберите руку, которую фотографировали.</p>

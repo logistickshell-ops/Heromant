@@ -46,6 +46,13 @@ export default function App() {
     setStep("welcome");
   };
 
+  const goBack = () => {
+    if (step === "capture") setStep("welcome");
+    else if (step === "hand") setStep("capture");
+    else if (step === "adjust") setStep("hand");
+    else if (step === "reading") setStep("adjust");
+  };
+
   const stepLabels: Record<Step, string> = {
     welcome: "Начало",
     capture: "Снимок",
@@ -76,13 +83,14 @@ export default function App() {
         <div key={step} className="step-portal relative">
           {step === "welcome" && <Welcome onStart={handleStart} />}
 
-          {step === "capture" && <Capture onCapture={handleCapture} />}
+          {step === "capture" && <Capture onCapture={handleCapture} onBack={goBack} />}
 
           {step === "hand" && (
             <HandSelection
               hand={hand}
               onSelect={handleHandSelect}
               onContinue={handleHandContinue}
+              onBack={goBack}
             />
           )}
 
@@ -96,7 +104,7 @@ export default function App() {
           )}
 
           {step === "reading" && lines && hand && (
-            <Reading lines={lines} userName={userName} hand={hand} onRestart={handleRestart} />
+            <Reading lines={lines} userName={userName} hand={hand} onRestart={handleRestart} onEdit={() => setStep("adjust")} />
           )}
         </div>
       </main>

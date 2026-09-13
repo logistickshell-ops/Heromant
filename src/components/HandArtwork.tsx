@@ -101,10 +101,10 @@ export default function HandArtwork({ lines, name }: HandArtworkProps) {
       <div className="text-center mb-4">
         <div className="flex items-center justify-center gap-2 text-amber-400 text-xs font-light tracking-widest uppercase mb-1">
           <Sparkles size={12} />
-          Ваша личная карта
+          СОВА · Ваша личная карта
         </div>
         <h3 className="text-xl font-light tracking-widest uppercase">
-          Произведение Судьбы
+          Ночная карта ладони
         </h3>
       </div>
 

@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { LinesState } from "../utils/palmistryRules";
-import { Check, Info, CircleHelp, Sparkles, Wand2, Sliders, Volume2, VolumeX } from "lucide-react";
+import { Check, Info, CircleHelp, Sparkles, Wand2, Sliders, Volume2, VolumeX, Minus, Plus, RotateCcw } from "lucide-react";
 import PalmGuide from "./PalmGuide";
 import { autoDetectLines, defaultLinesForHand } from "../utils/autoDetectLines";
 import { playScanChime, startScanSound, stopScanSound } from "../utils/scanSound";
@@ -30,6 +30,7 @@ export default function AdjustLines({ image, hand, onConfirm, onBack }: AdjustLi
   const [detectError, setDetectError] = useState(false);
   const [soundEnabled, setSoundEnabled] = useState(false);
   const [scanPhase, setScanPhase] = useState(0);
+  const [zoom, setZoom] = useState(1);
 
   // Авторазметка и ручная разметка используют одну и ту же выбранную руку.
   // Не меняем autoDetectLines: здесь исправляется только стартовый ручной шаблон.
@@ -91,6 +92,18 @@ export default function AdjustLines({ image, hand, onConfirm, onBack }: AdjustLi
     setActiveLine(lineKey);
     setDragging({ lineKey, pointKey });
   };
+
+  const nudgePoint = (lineKey: keyof LinesState, pointKey: "start" | "control" | "end", dx: number, dy: number) => {
+    setActiveLine(lineKey);
+    setLines((prev) => {
+      if (!prev) return prev;
+      const current = prev[lineKey][pointKey];
+      return { ...prev, [lineKey]: { ...prev[lineKey], [pointKey]: { x: Math.max(0, Math.min(500, current.x + dx)), y: Math.max(0, Math.min(500, current.y + dy)) } } };
+    });
+  };
+
+  const resetLine = (lineKey: keyof LinesState) => setLines((prev) => prev ? { ...prev, [lineKey]: { ...manualLines[lineKey] } } : prev);
+  const resetAll = () => setLines({ ...manualLines });
 
   const handleMove = (clientX: number, clientY: number) => {
     if (!dragging || !svgRef.current || !lines) return;
@@ -274,19 +287,22 @@ export default function AdjustLines({ image, hand, onConfirm, onBack }: AdjustLi
       </div>
 
       {/* SVG Interaction Area */}
-      <div className="relative w-72 h-72 sm:w-[400px] sm:h-[400px] border border-zinc-100 bg-white rounded-2xl overflow-hidden shadow-sm touch-none">
+      <div className="mb-3 flex w-full max-w-md items-center justify-between rounded-xl border border-zinc-100 bg-white px-3 py-2 text-xs text-zinc-500"><span>Масштаб ладони</span><span className="flex items-center gap-2"><button type="button" aria-label="Уменьшить" onClick={() => setZoom((value) => Math.max(1, value - .1))} className="rounded-full border p-1"><Minus size={13} /></button><strong className="min-w-12 text-center text-zinc-700">{Math.round(zoom * 100)}%</strong><button type="button" aria-label="Увеличить" onClick={() => setZoom((value) => Math.min(1.6, value + .1))} className="rounded-full border p-1"><Plus size={13} /></button></span></div>
+      <div className="relative h-72 w-72 overflow-hidden rounded-2xl border border-zinc-100 bg-white shadow-sm touch-none sm:h-[400px] sm:w-[400px]">
         {/* Background Image stylized */}
         <img
           src={image}
           alt="Ладонь"
-          className="absolute inset-0 w-full h-full object-cover select-none grayscale opacity-80 contrast-150"
+          className="absolute inset-0 h-full w-full select-none object-cover grayscale opacity-80 contrast-150 transition-transform duration-200"
+          style={{ transform: `scale(${zoom})` }}
         />
 
         {/* SVG overlay for lines and interactive points */}
         <svg
           ref={svgRef}
           viewBox="0 0 500 500"
-          className="absolute inset-0 w-full h-full cursor-crosshair select-none touch-none"
+          className="absolute inset-0 h-full w-full cursor-crosshair select-none touch-none transition-transform duration-200"
+          style={{ transform: `scale(${zoom})` }}
           onMouseMove={onMouseMove}
           onTouchMove={onTouchMove}
           onPointerMove={(event) => handleMove(event.clientX, event.clientY)}
@@ -326,15 +342,26 @@ export default function AdjustLines({ image, hand, onConfirm, onBack }: AdjustLi
                   key={`${lineKey}-${pointKey}`}
                   cx={p.x}
                   cy={p.y}
-                  r={isDragging ? 12 : 8}
-                  fill="white"
+                  r={isDragging ? 18 : 15}
+                  fill="rgba(255,255,255,.72)"
                   stroke={color}
                   strokeWidth={2.5}
                   className="cursor-pointer transition-all duration-100 shadow-md"
                   role="slider"
                   aria-label={`${lineNames[lineKey].title}, ${pointKey === "control" ? "изгиб" : pointKey === "start" ? "начало" : "конец"}`}
                   aria-valuetext="Перетащите точку по линии ладони"
+                  aria-valuemin={0}
+                  aria-valuemax={500}
+                  aria-valuenow={Math.round(p.x)}
                   tabIndex={0}
+                  onKeyDown={(event) => {
+                    const step = event.shiftKey ? 10 : 2;
+                    if (event.key === "ArrowLeft") nudgePoint(lineKey, pointKey, -step, 0);
+                    if (event.key === "ArrowRight") nudgePoint(lineKey, pointKey, step, 0);
+                    if (event.key === "ArrowUp") nudgePoint(lineKey, pointKey, 0, -step);
+                    if (event.key === "ArrowDown") nudgePoint(lineKey, pointKey, 0, step);
+                    if (["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].includes(event.key)) event.preventDefault();
+                  }}
                   onPointerDown={(event) => {
                     event.currentTarget.setPointerCapture(event.pointerId);
                     handleStartDrag(lineKey, pointKey);
@@ -359,12 +386,14 @@ export default function AdjustLines({ image, hand, onConfirm, onBack }: AdjustLi
           <p className="text-xs text-zinc-500 mt-1">{lineNames[activeLine].desc}</p>
         </div>
         <button
+          type="button"
           onClick={() => setShowGuide(true)}
           className="flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-full hover:bg-zinc-200 transition text-zinc-400 hover:text-zinc-600"
           title="Справка: Как читать ладонь"
         >
           <CircleHelp size={18} />
         </button>
+        <button type="button" onClick={() => resetLine(activeLine)} className="flex-shrink-0 rounded-full p-2 text-zinc-400 hover:bg-zinc-200" title="Сбросить активную линию" aria-label="Сбросить активную линию"><RotateCcw size={16} /></button>
       </div>
 
       {/* Selector pills */}
@@ -385,7 +414,8 @@ export default function AdjustLines({ image, hand, onConfirm, onBack }: AdjustLi
       </div>
 
       {/* Action Buttons */}
-      <div className="mt-8 flex gap-4 w-full px-4 max-w-md">
+      <div className="mt-8 flex w-full max-w-md gap-3 px-4">
+        <button type="button" onClick={resetAll} className="flex items-center justify-center gap-1 rounded-xl border border-zinc-200 px-3 py-3 text-xs text-zinc-500 hover:bg-zinc-50" title="Сбросить все линии"><RotateCcw size={14} /> Сбросить</button>
         <button
           onClick={onBack}
           className="flex-1 py-3 px-4 border border-zinc-200 rounded-xl text-zinc-600 hover:bg-zinc-50 transition text-sm font-medium"

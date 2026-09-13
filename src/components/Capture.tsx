@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
-import { ArrowRight, Camera, ImageUp, RefreshCw } from "lucide-react";
+import { ArrowLeft, ArrowRight, Camera, ImageUp, RefreshCw } from "lucide-react";
 
-interface CaptureProps { onCapture: (imageDataUrl: string) => void; }
+interface CaptureProps { onCapture: (imageDataUrl: string) => void; onBack: () => void; }
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
 const MAX_IMAGE_EDGE = 1600;
 
@@ -25,7 +25,7 @@ function resizeImage(file: File): Promise<string> {
   });
 }
 
-export default function Capture({ onCapture }: CaptureProps) {
+export default function Capture({ onCapture, onBack }: CaptureProps) {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const fileRef = useRef<HTMLInputElement | null>(null);
@@ -81,7 +81,7 @@ export default function Capture({ onCapture }: CaptureProps) {
 
   return (
     <section className="mx-auto flex min-h-[80vh] w-full max-w-xl flex-col items-center justify-center bg-[#fdfdfb] px-4 py-8 text-[#111111] sm:px-6">
-      <div className="mb-7 text-center"><p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.28em] text-zinc-400">Шаг 1 из 4</p><h2 className="text-2xl font-light uppercase tracking-[0.14em] text-zinc-800">Снимок ладони</h2><p className="mx-auto mt-3 max-w-sm text-sm leading-relaxed text-zinc-500">Ладонь вверх, пальцы расслаблены, вся ладонь в кадре. Избегайте бликов и сильных теней.</p></div>
+      <div className="mb-7 w-full text-center"><button type="button" onClick={onBack} className="mb-5 inline-flex items-center gap-2 self-start rounded-full border border-zinc-200 px-4 py-2 text-xs text-zinc-600 hover:bg-zinc-50"><ArrowLeft size={14} /> Назад</button><p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.28em] text-zinc-400">Шаг 1 из 4</p><h2 className="text-2xl font-light uppercase tracking-[0.14em] text-zinc-800">Снимок ладони</h2><p className="mx-auto mt-3 max-w-sm text-sm leading-relaxed text-zinc-500">Ладонь вверх, пальцы расслаблены, вся ладонь в кадре. Избегайте бликов и сильных теней.</p></div>
       <div className="relative h-72 w-72 overflow-hidden rounded-3xl border border-zinc-200 bg-zinc-50 shadow-sm sm:h-80 sm:w-80">
         {isCameraActive ? <video ref={videoRef} autoPlay playsInline muted className="h-full w-full object-cover" /> : capturedImage ? <img src={capturedImage} alt="Предпросмотр снимка ладони" className="h-full w-full object-cover" /> : <div className="flex h-full flex-col items-center justify-center p-6 text-center text-zinc-400"><Camera size={30} strokeWidth={1.2} /><p className="mt-3 text-xs">Камера не запущена</p></div>}
         {isCameraActive && <div className="pointer-events-none absolute inset-8 rounded-[40%] border border-dashed border-white/70"><span className="absolute left-0 right-0 top-1/2 text-center text-[10px] uppercase tracking-widest text-white/80">Центр ладони</span></div>}
