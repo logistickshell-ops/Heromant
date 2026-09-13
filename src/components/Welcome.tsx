@@ -36,7 +36,7 @@ export default function Welcome({ onStart }: WelcomeProps) {
             Сова-хиромант · чтение ладони
           </p>
           <h1 className="welcome-title text-6xl font-normal leading-[0.88] tracking-[-0.04em] text-white sm:text-8xl">
-            Ночная карта
+            Узор ладони
           </h1>
           <p className="mt-6 max-w-sm text-sm font-light leading-7 text-white/78 sm:text-base">
             Ваша ладонь хранит личный узор. Сделайте снимок и взгляните на него как на символическую карту характера и выбора.
