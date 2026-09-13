@@ -1,14 +1,40 @@
 @import "tailwindcss";
 
-@keyframes spin-slow {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+:root {
+  --owl-ink: #0d0b14;
+  --owl-plum: #21172b;
+  --owl-parchment: #f5f0e6;
+  --owl-moon: #e9e2d2;
+  --owl-mist: #83798c;
+  --owl-gold: #c99b4a;
 }
 
-.animate-spin-slow {
-  animation: spin-slow 20s linear infinite;
+.owl-shell { background: var(--owl-parchment); }
+.owl-header { border-color: rgba(33, 23, 43, .12); color: var(--owl-ink); }
+.owl-header button { color: var(--owl-plum); letter-spacing: .18em; }
+.owl-mark { display: inline-grid; place-items: center; width: 1.2rem; height: 1.2rem; margin-right: .35rem; border: 1px solid var(--owl-gold); border-radius: 999px; color: var(--owl-gold); font-size: .65rem; vertical-align: -1px; }
+.owl-footer { border-color: rgba(33, 23, 43, .12); color: var(--owl-mist); }
+
+/* Owl Palmistry surfaces: dusk ink, parchment cards, one restrained gold accent. */
+.owl-reading { background: var(--owl-parchment); }
+.owl-reading-hero { background: linear-gradient(135deg, var(--owl-ink), var(--owl-plum)); border: 1px solid rgba(201,155,74,.35); }
+.owl-eyebrow { color: #dec17a; }
+.owl-disclaimer { border-color: rgba(201,155,74,.5); background: #eee2c8; color: #3b2b1b; }
+.owl-shell button { min-height: 42px; font-family: inherit; transition: transform 180ms ease, box-shadow 180ms ease, background-color 180ms ease, border-color 180ms ease; }
+.owl-shell button:not(:disabled):hover { transform: translateY(-1px); }
+.owl-shell button:focus-visible, .owl-shell input:focus-visible { outline: 2px solid var(--owl-gold); outline-offset: 2px; }
+.owl-button { box-shadow: 0 8px 22px rgba(13,11,20,.24); }
+.owl-button:hover { box-shadow: 0 12px 28px rgba(13,11,20,.32); }
+
+@keyframes portal-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.step-portal {
+  animation: portal-in 420ms ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .step-portal { animation: none; }
 }

@@ -31,11 +31,10 @@ export default function AdjustLines({ image, hand, onConfirm, onBack }: AdjustLi
   const [soundEnabled, setSoundEnabled] = useState(false);
   const [scanPhase, setScanPhase] = useState(0);
 
-  // Дефолтные позиции линий - зависят от руки
+  // Авторазметка и ручная разметка используют одну и ту же выбранную руку.
+  // Не меняем autoDetectLines: здесь исправляется только стартовый ручной шаблон.
   const defaultLines: LinesState = defaultLinesForHand[hand];
-  // Manual mode intentionally starts from the opposite hand template so the
-  // user can compare the two palm layouts before placing the points by hand.
-  const manualLines: LinesState = defaultLinesForHand[hand === "left" ? "right" : "left"];
+  const manualLines: LinesState = defaultLinesForHand[hand];
 
   useEffect(() => {
     if (!isDetecting) return;
