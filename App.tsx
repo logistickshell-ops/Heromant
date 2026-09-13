@@ -55,16 +55,16 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-[#FDFDFB] text-[#111111] flex flex-col font-sans antialiased">
+    <div className="owl-shell min-h-screen bg-[#F5F0E6] text-[#17121D] flex flex-col font-sans antialiased">
       {/* Global Minimalist Header */}
-      <header className="border-b border-zinc-100/60 py-3 px-4 sm:px-6 flex justify-between items-center bg-[#FDFDFB]/80 backdrop-blur-md sticky top-0 z-50">
+      <header className="owl-header border-b border-zinc-100/60 py-3 px-4 sm:px-6 flex justify-between items-center bg-[#FDFDFB]/80 backdrop-blur-md sticky top-0 z-50">
         <button
           type="button"
           className="text-xs font-light tracking-[0.25em] uppercase text-zinc-900 cursor-pointer"
           onClick={handleRestart}
           aria-label="Вернуться на главный экран"
         >
-          ХИРОМАНТ
+          <span className="owl-mark" aria-hidden="true">◉</span> СОВА · ХИРОМАНТ
         </button>
         <span className="text-[10px] font-medium tracking-widest text-zinc-400 uppercase">
           {stepLabels[step]}
@@ -102,7 +102,7 @@ export default function App() {
       </main>
 
       {/* Global Minimalist Footer */}
-      <footer className="border-t border-zinc-100/60 px-4 py-2.5 text-center">
+      <footer className="owl-footer border-t border-zinc-100/60 px-4 py-2.5 text-center">
         <p className="text-[9px] text-zinc-400 font-light tracking-widest uppercase">
           &copy; {new Date().getFullYear()} CHIROMANT — РАЗВЛЕКАТЕЛЬНАЯ ИНТЕРПРЕТАЦИЯ
         </p>

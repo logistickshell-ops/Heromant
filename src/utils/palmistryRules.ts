@@ -645,14 +645,15 @@ export function generateAnalysis(lines: LinesState): FullAnalysis {
 
   // Подбираем лучший вариант для каждой линии
   function findBest(readings: LineReading[], metrics: LineMetrics): { title: string; text: string } {
-    for (const r of readings) {
-      if (r.condition(metrics)) {
-        const alternatives = alternatePhrases[r.title] ?? [];
-        if (alternatives.length === 0) return { title: r.title, text: r.text };
-        const signature = Math.round(metrics.len * 7 + metrics.curv * 13 + metrics.angle * 3 + metrics.ctrlX * 5 + metrics.ctrlY);
-        const variant = Math.abs(signature) % (alternatives.length + 1);
-        return { title: r.title, text: variant === 0 ? r.text : alternatives[variant - 1] };
-      }
+    const matches = readings.filter((reading) => reading.condition(metrics));
+    if (matches.length > 0) {
+      const signature = Math.abs(Math.round(metrics.len * 7 + metrics.curv * 13 + metrics.angle * 3 + metrics.ctrlX * 5 + metrics.ctrlY));
+      // Broad bands provide a stable base, while later geometric matches add
+      // color and variation instead of being silently unreachable.
+      const selected = matches[signature % matches.length];
+      const alternatives = alternatePhrases[selected.title] ?? [];
+      const variant = signature % (alternatives.length + 1);
+      return { title: selected.title, text: variant === 0 ? selected.text : alternatives[variant - 1] };
     }
     // fallback — последний элемент
     const last = readings[readings.length - 1];
@@ -702,14 +703,14 @@ export function generateAnalysis(lines: LinesState): FullAnalysis {
     "Тихий источник — восстановление через личное пространство и честный разговор",
   ];
   const personalityTypes = [
-    "Тип личности: Искатель смыслов — задаёт глубокие вопросы и собирает опыт в цельную картину",
-    "Тип личности: Тихий лидер — влияет не громкостью, а последовательностью и присутствием",
-    "Тип личности: Архитектор перемен — превращает неопределённость в понятный маршрут",
-    "Тип личности: Хранитель связей — замечает нюансы людей и умеет создавать доверие",
-    "Тип личности: Свободный исследователь — раскрывается через новые среды, идеи и роли",
-    "Тип личности: Творческий навигатор — соединяет воображение с практическим движением",
-    "Тип личности: Стратег равновесия — ищет точку, где амбиция не спорит с внутренним покоем",
-    "Тип личности: Собиратель историй — превращает события и наблюдения в личную мудрость",
+    "Оттенок совы: Искатель смыслов — задаёт глубокие вопросы и собирает опыт в цельную картину",
+    "Оттенок совы: Тихий лидер — влияет не громкостью, а последовательностью и присутствием",
+    "Оттенок совы: Архитектор перемен — превращает неопределённость в понятный маршрут",
+    "Оттенок совы: Хранитель связей — замечает нюансы людей и умеет создавать доверие",
+    "Оттенок совы: Свободный исследователь — раскрывается через новые среды, идеи и роли",
+    "Оттенок совы: Творческий навигатор — соединяет воображение с практическим движением",
+    "Оттенок совы: Стратег равновесия — ищет точку, где амбиция не спорит с внутренним покоем",
+    "Оттенок совы: Собиратель историй — превращает события и наблюдения в личную мудрость",
   ];
   elements.push(profileMotifs[fingerprint % profileMotifs.length]);
   elements.push(personalityTypes[(fingerprint + Math.round(head.len) + Math.round(heart.curv)) % personalityTypes.length]);
@@ -746,12 +747,20 @@ export function generateAnalysis(lines: LinesState): FullAnalysis {
 
   const advice = advicePool.join(". ") + ".";
 
+  const owlWhispers = [
+    "Сова заметила в этом узоре тихое движение между тенью и светом.",
+    "Если смотреть на ладонь как на ночную карту, здесь особенно заметен мотив внутреннего слуха.",
+    "Этот рисунок напоминает: ясность часто приходит не вспышкой, а внимательным наблюдением.",
+    "В символическом языке совы здесь звучит приглашение видеть глубже первого впечатления.",
+  ];
+  const whisper = owlWhispers[fingerprint % owlWhispers.length];
+
   return {
-    heart: { title: heartResult.title, description: heartResult.text },
-    head: { title: headResult.title, description: headResult.text },
-    life: { title: lifeResult.title, description: lifeResult.text },
-    fate: { title: fateResult.title, description: fateResult.text },
-    overall,
+    heart: { title: heartResult.title, description: `${whisper} ${heartResult.text}` },
+    head: { title: headResult.title, description: `${whisper} ${headResult.text}` },
+    life: { title: lifeResult.title, description: `${whisper} ${lifeResult.text}` },
+    fate: { title: fateResult.title, description: `${whisper} ${fateResult.text}` },
+    overall: `${whisper} ${overall}`,
     dominantElement,
     elements,
     compatibility,
